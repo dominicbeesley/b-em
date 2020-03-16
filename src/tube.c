@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include "b-em.h"
-#include "6502.h"
+#include "sys.h"
 #include "model.h"
 #include "tube.h"
 

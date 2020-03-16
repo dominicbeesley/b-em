@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 #include "b-em.h"
-#include "6502.h"
 #include "acia.h"
+#include "sys.h"
 
 /* Status register flags */
 

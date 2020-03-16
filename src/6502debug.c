@@ -2,8 +2,8 @@
 
 #include "b-em.h"
 #include "6502debug.h"
-#include "6502.h"
 #include "65816.h"
+#include "sys.h"
 
 const char *dbg6502_reg_names[] = { "A", "X", "Y", "S", "P", "PC", NULL };
 
@@ -351,14 +351,14 @@ uint32_t dbg6502_disassemble(cpu_debug_t *cpu, uint32_t addr, char *buf, size_t 
     return addr;
 }
 
-size_t dbg6502_print_flags(PREG *pp, char *buf, size_t bufsize) {
+size_t dbg6502_print_flags(uint8_t flags, char *buf, size_t bufsize) {
     if (bufsize >= 6) {
-	*buf++ = p.n ? 'N' : ' ';
-	*buf++ = p.v ? 'V' : ' ';
-	*buf++ = p.d ? 'D' : ' ';
-	*buf++ = p.i ? 'I' : ' ';
-	*buf++ = p.z ? 'Z' : ' ';
-	*buf++ = p.c ? 'C' : ' ';
+	*buf++ = flags & F_N ? 'N' : ' ';
+	*buf++ = flags & F_V ? 'V' : ' ';
+	*buf++ = flags & F_D ? 'D' : ' ';
+	*buf++ = flags & F_I ? 'I' : ' ';
+	*buf++ = flags & F_Z ? 'Z' : ' ';
+	*buf++ = flags & F_C ? 'C' : ' ';
 	return 6;
     }
     return 0;

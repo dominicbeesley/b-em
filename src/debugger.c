@@ -10,7 +10,7 @@
 #include "b-em.h"
 #include "main.h"
 #include "model.h"
-#include "6502.h"
+#include "sys.h"
 
 #include <allegro5/allegro_primitives.h>
 
@@ -207,7 +207,6 @@ static inline void debug_cons_close(void) {}
 #endif
 
 #include <errno.h>
-#include "6502.h"
 #include "via.h"
 #include "sysvia.h"
 #include "uservia.h"

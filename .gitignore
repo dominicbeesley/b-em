@@ -46,3 +46,10 @@ src/hdfmt.exe
 scsi/*
 build/*
 b-em.ilk
+b-em.sublime-project
+b-em.sublime-workspace
+src/cpu/testasm/test-rom0.lst
+src/cpu/testasm/test-rom0.map
+src/cpu/testasm/test-rom0.mos
+src/cpu/testasm/test-rom0.sy2
+src/cpu/testasm/test-rom0.sym.noi

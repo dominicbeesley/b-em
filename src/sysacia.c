@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include "b-em.h"
-#include "6502.h"
+#include "sys.h"
 #include "acia.h"
 #include "serial.h"
 #include "tape.h"

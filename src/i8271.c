@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "b-em.h"
-#include "6502.h"
+#include "sys.h"
 #include "ddnoise.h"
 #include "i8271.h"
 #include "disc.h"
@@ -135,19 +135,19 @@ uint8_t i8271_read(uint16_t addr)
         switch (addr & 7)
         {
             case 0: /*Status register*/
-                log_debug("i8271: Read status reg %04X %02X\n",pc,i8271.status);
+                log_debug("i8271: Read status reg %04X %02X\n",cpu_cur_op_pc,i8271.status);
                 return i8271.status;
             case 1: /*Result register*/
-                log_debug("i8271: Read result reg %04X %02X\n",pc,i8271.result);
+                log_debug("i8271: Read result reg %04X %02X\n",cpu_cur_op_pc,i8271.result);
                 i8271.status &= ~0x18;
                 i8271_NMI();
   //              output=1; timetolive=50;
                 return i8271.result;
             case 4: /*Data register*/
-                //log_debug("i8271: Read data reg %04X %02X\n",pc,i8271.data);
+                //log_debug("i8271: Read data reg %04X %02X\n",cpu_cur_op_pc,i8271.data);
                 i8271.status &= ~0xC;
                 i8271_NMI();
-//                printf("Read data reg %04X %02X\n",pc,i8271.status);
+//                printf("Read data reg %04X %02X\n",cpu_cur_op_pc,i8271.status);
                 return i8271.data;
         }
         return 0;

@@ -178,6 +178,7 @@
     <ClInclude Include="sid_b-em.h" />
     <ClInclude Include="sn76489.h" />
     <ClInclude Include="sound.h" />
+    <ClInclude Include="sys.h" />
     <ClInclude Include="sysacia.h" />
     <ClInclude Include="sysvia.h" />
     <ClInclude Include="tape.h" />
@@ -283,6 +284,7 @@
     <ClCompile Include="serial.c" />
     <ClCompile Include="sn76489.c" />
     <ClCompile Include="sound.c" />
+    <ClCompile Include="sys.c" />
     <ClCompile Include="sysacia.c" />
     <ClCompile Include="sysvia.c" />
     <ClCompile Include="tape.c" />

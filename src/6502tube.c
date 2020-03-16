@@ -21,6 +21,12 @@ static int tube_6502_oldnmi;
 /*6502 registers*/
 static uint8_t a, x, y, s;
 static uint16_t pc;
+
+typedef struct PREG
+{
+    int c,z,i,d,v,n;
+} PREG;
+
 static PREG tubep;
 
 /*Memory structures*/
@@ -161,7 +167,7 @@ static void dbg_reg_set(int which, uint32_t value) {
 static size_t dbg_reg_print(int which, char *buf, size_t bufsize) {
     switch (which) {
         case REG_P:
-            return dbg6502_print_flags(&tubep, buf, bufsize);
+            return dbg6502_print_flags(pack_flags(0x00), buf, bufsize);
             break;
         case REG_PC:
             return snprintf(buf, bufsize, "%04X", tubepc);

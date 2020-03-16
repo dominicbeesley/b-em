@@ -8,7 +8,7 @@
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_primitives.h>
 
-#include "6502.h"
+#include "sys.h"
 #include "adc.h"
 #include "model.h"
 #include "cmos.h"
@@ -100,7 +100,7 @@ const emu_speed_t emu_speeds[NUM_EMU_SPEEDS] = {
 
 void main_reset()
 {
-    m6502_reset();
+    sys_reset();
     crtc_reset();
     video_reset();
     sysvia_reset();
@@ -377,7 +377,7 @@ static void main_key_down(ALLEGRO_EVENT *event)
                 debug_step = 1;
             break;
         case ALLEGRO_KEY_F12:
-            m6502_reset();
+            sys_reset();
             video_reset();
             i8271_reset();
             wd1770_reset();
@@ -434,10 +434,7 @@ static void main_timer(ALLEGRO_EVENT *event)
             autoboot--;
         framesrun++;
 
-        if (x65c02)
-            m65c02_exec();
-        else
-            m6502_exec();
+        sys_exec();
 
         if (ddnoise_ticks > 0 && --ddnoise_ticks == 0)
             ddnoise_headdown();

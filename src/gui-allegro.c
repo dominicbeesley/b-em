@@ -2,7 +2,7 @@
 #include <allegro5/allegro_native_dialog.h>
 #include "gui-allegro.h"
 
-#include "6502.h"
+#include "sys.h"
 #include "ide.h"
 #include "debugger.h"
 #include "ddnoise.h"

@@ -1,30 +1,61 @@
 # Makefile.am for B-em
 
-bin_PROGRAMS = b-em hdfmt jstest gtest
+#generated files
+VPATH = $(srcdir) $(builddir)
+
+bin_PROGRAMS = b-em hdfmt jstest gtest cpu_test1
 noinst_SCRIPTS = ../b-em$(EXEEXT)
-CLEANFILES = $(noinst_SCRIPTS)
+
+noinst_LIBRARIES = lib_m6502.a
+
+CLEANFILES = $(noinst_SCRIPTS) $(m6502_GEN) 
 
 ../b-em$(EXEEXT): b-em$(EXEEXT)
 	cp b-em$(EXEEXT) ..
 
 amrefresh:
 
+m6502_GEN = cpu/m6502/m6502.gen.h cpu/m6502/m6502_top.gen.h cpu/m6502/m6502.gen.cpp
+lib_m6502_a_SOURCES = cpu/m6502/m65x_device.cpp \
+		cpu/m6502/m6502.cpp \
+		cpu/m6502/m6502.gen.cpp 
+
+lib_m6502_a_CFLAGS = -I$(srcdir) -I$(srcdir)/cpu/m6502 -I$(builddir)/cpu/m6502
+lib_m6502_a_CPPFLAGS = $(lib_m6502_a_CFLAGS)
+
+
+$(m6502_GEN): $(srcdir)/cpu/m6502/om6502.lst $(srcdir)/cpu/m6502/dm6502.lst
+	$(PERL) $(srcdir)/cpu/m6502/makehxx.pl m6502 $(srcdir)/cpu/m6502/om6502.lst $(srcdir)/cpu/m6502/dm6502.lst $(m6502_GEN)
+
+
+
 # The following flags are used by PiTubeDirect Co Pros:
 #                BEM - fixes for compilation in B-Em envorinment
 #   INCLUDE_DEBUGGER - include the cpu_debug implementation
 # USE_MEMORY_POINTER - do not assume Co Pro memory starts at address 0
 
-b_em_CFLAGS = $(allegro_CFLAGS) -DBEM -DINCLUDE_DEBUGGER -DUSE_MEMORY_POINTER
+b_em_CFLAGS = $(allegro_CFLAGS) -DBEM -DINCLUDE_DEBUGGER -DUSE_MEMORY_POINTER -I$(srcdir) -I$(srcdir)/cpu/m6502 -I$(builddir)/cpu/m6502
+b_em_CPPFLAGS = $(b_em_CFLAGS)
+
+cpu_test1_CFLAGS = $(allegro_CFLAGS) -DBEM -DINCLUDE_DEBUGGER -DUSE_MEMORY_POINTER -I$(srcdir) -I$(srcdir)/cpu/m6502 -I$(builddir)/cpu/m6502
+cpu_test1_CPPFLAGS = $(cpu_test1_CFLAGS)
+
+cpu_test1_SOURCES = cpu/test1/test1.cpp
+cpu_test1_LDADD = lib_m6502.a
 
 # workaround for Win32 Allegro, which has `allegro-config' missing
 if OS_WIN
-b_em_LDADD = -lallegro_audio -lallegro_acodec -lallegro_primitives -lallegro_dialog -lallegro_image -lallegro_font -lallegro -lz -lm
+b_em_LDADD = lib_m6502.a -lallegro_audio -lallegro_acodec -lallegro_primitives -lallegro_dialog -lallegro_image -lallegro_font -lallegro -lz -lm
 else
-b_em_LDADD = -lallegro_audio -lallegro_acodec -lallegro_primitives -lallegro_dialog -lallegro_image -lallegro_font -lallegro_main -lallegro -lz -lm -lpthread
+b_em_LDADD = lib_m6502.a -lallegro_audio -lallegro_acodec -lallegro_primitives -lallegro_dialog -lallegro_image -lallegro_font -lallegro_main -lallegro -lz -lm -lpthread
 endif
 
+
+#	6502.c 
+
 b_em_SOURCES = \
-	6502.c \
+	$(nodist_m6502_SOURCES) \
+	$(m6502_SOURCES) \
 	6502debug.c \
 	6502tube.c \
 	65816.c \
@@ -68,9 +99,9 @@ b_em_SOURCES = \
 	keydef-allegro.c \
 	linux.c \
 	logging.c \
-    mc6809nc/mc6809nc.c \
-    mc6809nc/mc6809_debug.c \
-    mc6809nc/mc6809_dis.c \
+        mc6809nc/mc6809nc.c \
+        mc6809nc/mc6809_debug.c \
+        mc6809nc/mc6809_dis.c \
 	main.c \
 	mem.c \
 	model.c \
@@ -91,6 +122,7 @@ b_em_SOURCES = \
 	sound.c \
 	sysacia.c \
 	sysvia.c \
+	sys.cpp \
 	tape.c \
 	tapecat-allegro.c \
 	tapenoise.c \

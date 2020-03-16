@@ -1,5 +1,5 @@
 #include "b-em.h"
-#include "6502.h"
+#include "sys.h"
 #include "via.h"
 
 #define INT_CA1    0x02

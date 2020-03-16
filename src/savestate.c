@@ -3,7 +3,7 @@
 #include "b-em.h"
 #include <zlib.h>
 
-#include "6502.h"
+#include "sys.h"
 #include "adc.h"
 #include "main.h"
 #include "mem.h"

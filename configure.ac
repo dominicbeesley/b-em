@@ -4,6 +4,7 @@ AC_INIT([B-em],
 	m4_esyscmd_s([utils/b-em-version-str.sh]),
 	[thomas@xteddy.org])
 
+
 AC_CONFIG_AUX_DIR(etc)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AM_SILENT_RULES([yes])
@@ -14,6 +15,10 @@ AC_CANONICAL_HOST
 AC_PROG_CC
 AC_PROG_CXX
 AM_PROG_CC_C_O
+
+AC_PROG_RANLIB()
+AM_PROG_AR()
+
 
 # Whether this is a released build or not.
 ISRELEASED="no"

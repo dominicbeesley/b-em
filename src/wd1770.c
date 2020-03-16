@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "b-em.h"
 #include "ddnoise.h"
-#include "6502.h"
+#include "sys.h"
 #include "wd1770.h"
 #include "disc.h"
 #include "model.h"
@@ -332,7 +332,7 @@ void wd1770_write(uint16_t addr, uint8_t val)
             write_1770(addr, val);
         break;
     case FDC_WATFORD:
-        log_debug("wd1770: write to watford WD1770 board: %04x=%02x, pc=%04x", addr, val, pc);
+        log_debug("wd1770: write to watford WD1770 board: %04x=%02x, pc=%04x", addr, val, cpu_cur_op_pc);
         if (addr & 0x0004)
             write_1770(addr, val);
         else

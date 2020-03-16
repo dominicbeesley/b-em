@@ -1,5 +1,13 @@
-#ifndef __INCLUDE_VDFS_H__
-#define __INCLUDE_VDFS_H__
+#ifndef __VDFS_H_
+#define __VDFS_H_
+
+
+/* TODO: reinstate VDFS
+
+Dominic Beesley 2020 - removed during Blitter port, the way VDFS intimately 
+uses the 6502 registers is not really compatible
+
+*/
 
 extern void vdfs_init(void);
 extern void vdfs_reset(void);
@@ -13,5 +21,6 @@ extern void vdfs_set_root(const char *dir);
 
 extern void vdfs_loadstate(FILE *f);
 extern void vdfs_savestate(FILE *f);
+
 
 #endif
