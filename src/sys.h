@@ -6,11 +6,15 @@ Dominic Beesley 2020 - separate out main system board functions from 6502.c
 */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <inttypes.h>
 #include "6502debug.h"
 
 void sys_reset(void);
 void sys_exec(void);
+
+extern FILE *hogrec_fp;
+void hogrec_start(const char *filename);
 
 extern int interrupt;
 extern int nmi;

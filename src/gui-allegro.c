@@ -107,9 +107,10 @@ static ALLEGRO_MENU *create_file_menu(void)
     al_append_menu_item(menu, "Load state...", IDM_FILE_LOAD_STATE, 0, NULL, NULL);
     al_append_menu_item(menu, "Save State...", IDM_FILE_SAVE_STATE, 0, NULL, NULL);
     al_append_menu_item(menu, "Save Screenshot...", IDM_FILE_SCREEN_SHOT, 0, NULL, NULL);
-    add_checkbox_item(menu, "Print to file", IDM_FILE_PRINT, prt_fp);
-    add_checkbox_item(menu, "Record Music 5000 to file", IDM_FILE_M5000, music5000_fp);
-    add_checkbox_item(menu, "Record Paula to file", IDM_FILE_PAULAREC, paula_fp);
+    add_checkbox_item(menu, "Print to file...", IDM_FILE_PRINT, prt_fp);
+    add_checkbox_item(menu, "Record Music 5000 to file...", IDM_FILE_M5000, music5000_fp);
+    add_checkbox_item(menu, "Record Paula to file...", IDM_FILE_PAULAREC, paula_fp);
+    add_checkbox_item(menu, "Record for decode6502...", IDM_FILE_HOGREC, hogrec_fp);
     al_append_menu_item(menu, "Exit", IDM_FILE_EXIT, 0, NULL, NULL);
     return menu;
 }
@@ -601,6 +602,27 @@ static void paula_rec(ALLEGRO_EVENT *event)
     }
 }
 
+static void hoglet_rec(ALLEGRO_EVENT *event)
+{
+    ALLEGRO_FILECHOOSER *chooser;
+    ALLEGRO_DISPLAY *display;
+
+    if (hogrec_fp)
+    {
+        fclose(hogrec_fp);
+        hogrec_fp = 0;
+    }
+    else if ((chooser = al_create_native_file_dialog(savestate_name, "Record cpu activity to file", "*.bin", ALLEGRO_FILECHOOSER_SAVE))) {
+        display = (ALLEGRO_DISPLAY *)(event->user.data2);
+        while (al_show_native_file_dialog(display, chooser)) {
+            if (al_get_native_file_dialog_count(chooser) <= 0)
+                break;
+            hogrec_start(al_get_native_file_dialog_path(chooser, 0));
+            break;
+        }
+        al_destroy_native_file_dialog(chooser);
+    }
+}
 
 static void edit_print_clip(ALLEGRO_EVENT *event)
 {
@@ -960,6 +982,9 @@ void gui_allegro_event(ALLEGRO_EVENT *event)
             break;
         case IDM_FILE_PAULAREC:
             paula_rec(event);
+            break;
+        case IDM_FILE_HOGREC:
+            hoglet_rec(event);
             break;
         case IDM_FILE_EXIT:
             quitting = true;

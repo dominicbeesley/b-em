@@ -4,6 +4,8 @@
   Dominic Beesley 2020 - separate out main system board functions from 6502.c
   */
 
+#include <stdio.h>
+
 #include "m6502.h"
 extern "C" {
 #include "b-em.h"
@@ -33,7 +35,7 @@ extern "C" {
 #include "wd1770.h"
 }
 
-m6502_device *cpu;
+m6502_device *cpu = NULL;
 
 static int dbg_core6502 = 0;
 
@@ -723,8 +725,8 @@ void writemem(uint16_t addr, uint8_t val)
 }
 
 
-
 void sys_reset() {
+
     int c;
     for (c = 0; c < 16; c++)
         RAMbank[c] = 0;
@@ -764,6 +766,16 @@ void sys_reset() {
     cpu->init();
     cpu->reset();
 
+    if (hogrec_fp) {
+        // make a dummy set of reset cycles
+
+        uint8_t d[2] = { 0xFF, 0x07 };
+        for (int i = 0; i < 100; i++) {
+            fwrite((const char *)&d[0],1 , 2, hogrec_fp);
+        }
+    }
+
+
 }
 
 
@@ -800,13 +812,14 @@ static void otherstuff_poll(void) {
     }
 }
 
-void sys_exec() {
 
+void sys_exec() {
 
     cycles += 40000;
 
     while (cycles > 0)
     {
+        bool sync = false;
         if (cpu)
         {
 
@@ -819,30 +832,48 @@ void sys_exec() {
 
             cpu->execute_set_input(M6502_IRQ_LINE, interrupt ? ASSERT_LINE : CLEAR_LINE);
 
+            if (hogrec_fp) {
+                uint8_t d[2];
+                d[0] = cpu->getDATA();
+                d[1] = 
+                    (cpu->getRNW() ? 0x01 : 00)
+                    + (cpu->get_sync() ? 0x02 : 00)
+                    + 0x04 //rdy
+                    + 0x40 //rst
+                    ;
+                fwrite((const char *)&d[0], 1, 2, hogrec_fp);
+            }
+
             cpu->tick();
 
             uint16_t a = cpu->getADDR();
 
             if (cpu->get_sync())
+            {
+                vis20k = RAMbank[a >> 12];
                 cpu_cur_op_pc = a;
+                sync = true;
+            }
             if (cpu->getRNW())
                 cpu->setDATA(do_readmem(a));
             else
                 do_writemem(a, cpu->getDATA());
-        }
+        } 
 
         polltime(1);
 
 
-                //TODO: less?
-                if (otherstuffcount <= 0)
-                    otherstuff_poll();
-                if (tube_exec && tubecycle) {
-                        tubecycles += (tubecycle * tube_multipler) >> 1;
-                        if (tubecycles > 3)
-                                tube_exec();
-                        tubecycle = 0;
-                }
+        if (sync) {
+            //TODO: less?
+            if (otherstuffcount <= 0)
+                otherstuff_poll();
+            if (tube_exec && tubecycle) {
+                    tubecycles += (tubecycle * tube_multipler) >> 1;
+                    if (tubecycles > 3)
+                            tube_exec();
+                    tubecycle = 0;
+            }
+        }
 
     }
 }
@@ -887,5 +918,11 @@ void m6502_loadstate(FILE * f)
         cycles |= (getc(f) << 16);
         cycles |= (getc(f) << 24);
     */
+}
+
+FILE *hogrec_fp;
+
+void hogrec_start(const char *filename) {
+    hogrec_fp = fopen(filename, "wb");
 }
 
