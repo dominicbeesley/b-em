@@ -14,7 +14,7 @@
 #include "m65c02.h"
 
 class r65c02_device;
-#include "r65c02.top.hxx"
+#include "r65c02_top.gen.h"
 
 class r65c02_device : public m65c02_device {
 public:
@@ -23,7 +23,7 @@ public:
 protected:
 
 
-	#include "r65c02.hxx"
+	#include "r65c02.gen.h"
 
 
 

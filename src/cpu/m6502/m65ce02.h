@@ -16,7 +16,7 @@
 
 class m65ce02_device;
 
-#include "m65ce02.top.hxx"
+#include "m65ce02_top.gen.h"
 
 class m65ce02_device : public m65c02_device {
 public:
@@ -33,7 +33,7 @@ protected:
 	inline void dec_SP_ce() { if(P & F_E) SP = set_l(SP, SP-1); else SP--; }
 	inline void inc_SP_ce() { if(P & F_E) SP = set_l(SP, SP+1); else SP++; }
 
-	#include "m65ce02.hxx"
+	#include "m65ce02.gen.h"
 
 private:
 

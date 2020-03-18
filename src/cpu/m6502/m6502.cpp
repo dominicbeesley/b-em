@@ -23,9 +23,9 @@ void m6502_device::reset()
 	v_state = false;
 	inhibit_interrupts = false;
 	skip_ints_next = false;
-
-	NextFn = (m65x_device::StatFn)&m6502_device_reset_0;
+	
 	m65x_device::reset();
+	NextFn = (m65x_device::StatFn)&m6502_device_reset_0;
 
 }
 
@@ -33,6 +33,8 @@ void m6502_device::reset()
 
 void m6502_device::init()
 {
+	m65x_device::init();
+
 	PC = 0x0000;
 	A = 0x00;
 	X = 0x80;
@@ -42,20 +44,7 @@ void m6502_device::init()
 	TMP = 0x0000;
 	TMP2 = 0x00;
 	IR = 0x00;
-	nmi_state = false;
-	irq_state = false;
-	irq_taken = false;
-	v_state = false;
-	halt_state = false;
-	inhibit_interrupts = false;
-	skip_ints_next = false;
-	
-
-
-	m65x_device::init();
-
-	NextFn = (m65x_device::StatFn)&m6502_device_reset_0;
-	PrefetchNextFn = 0;
+	reset();
 }
 
 

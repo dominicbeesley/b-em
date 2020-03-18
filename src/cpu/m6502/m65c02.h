@@ -17,7 +17,7 @@
 
 class m65c02_device;
 
-#include "m65c02.top.hxx"
+#include "m65c02_top.gen.h"
 
 class m65c02_device : public m6502_device {
 public:
@@ -28,7 +28,7 @@ public:
 
 protected:
 
-	#include "m65c02.hxx"
+	#include "m65c02.gen.h"
 
 };
 

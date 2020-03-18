@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #include "m6502.h"
+#include "m65c02.h"
 extern "C" {
 #include "b-em.h"
 #include "sys.h"
@@ -762,7 +763,10 @@ void sys_reset() {
     if (cpu)
         delete cpu;
 
-    cpu = new m6502_device();
+    if (x65c02)
+        cpu = new m65c02_device();    
+    else
+        cpu = new m6502_device();
     cpu->init();
     cpu->reset();
 

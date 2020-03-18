@@ -15,10 +15,22 @@ CLEANFILES = $(noinst_SCRIPTS) $(m6502_GEN)
 
 amrefresh:
 
-m6502_GEN = cpu/m6502/m6502.gen.h cpu/m6502/m6502_top.gen.h cpu/m6502/m6502.gen.cpp
+m6502_GEN = 	cpu/m6502/m6502.gen.h cpu/m6502/m6502_top.gen.h cpu/m6502/m6502.gen.cpp 
+m65c02_GEN =	cpu/m6502/m65c02.gen.h cpu/m6502/m65c02_top.gen.h cpu/m6502/m65c02.gen.cpp
+r65c02_GEN =	cpu/m6502/r65c02.gen.h cpu/m6502/r65c02_top.gen.h cpu/m6502/r65c02.gen.cpp
+m65ce02_GEN =	cpu/m6502/m65ce02.gen.h cpu/m6502/m65ce02_top.gen.h cpu/m6502/m65ce02.gen.cpp
+
+BUILT_SOURCES = $(m6502_GEN) $(m65c02_GEN) $(r65c02_GEN) $(m65ce02_GEN)
+
 lib_m6502_a_SOURCES = cpu/m6502/m65x_device.cpp \
 		cpu/m6502/m6502.cpp \
-		cpu/m6502/m6502.gen.cpp 
+		cpu/m6502/m65ce02.cpp \
+		cpu/m6502/m65sc02.cpp \
+		cpu/m6502/r65c02.cpp \
+		cpu/m6502/m6502.gen.cpp \
+		cpu/m6502/m65c02.gen.cpp \
+		cpu/m6502/r65c02.gen.cpp \
+		cpu/m6502/m65ce02.gen.cpp 
 
 lib_m6502_a_CFLAGS = -I$(srcdir) -I$(srcdir)/cpu/m6502 -I$(builddir)/cpu/m6502
 lib_m6502_a_CPPFLAGS = $(lib_m6502_a_CFLAGS)
@@ -27,6 +39,14 @@ lib_m6502_a_CPPFLAGS = $(lib_m6502_a_CFLAGS)
 $(m6502_GEN): $(srcdir)/cpu/m6502/om6502.lst $(srcdir)/cpu/m6502/dm6502.lst
 	$(PERL) $(srcdir)/cpu/m6502/makehxx.pl m6502 $(srcdir)/cpu/m6502/om6502.lst $(srcdir)/cpu/m6502/dm6502.lst $(m6502_GEN)
 
+$(m65c02_GEN): $(srcdir)/cpu/m6502/om65c02.lst $(srcdir)/cpu/m6502/dm65c02.lst
+	$(PERL) $(srcdir)/cpu/m6502/makehxx.pl m65c02 $(srcdir)/cpu/m6502/om65c02.lst $(srcdir)/cpu/m6502/dm65c02.lst $(m65c02_GEN)
+
+$(r65c02_GEN): $(srcdir)/cpu/m6502/dr65c02.lst
+	$(PERL) $(srcdir)/cpu/m6502/makehxx.pl r65c02 - $(srcdir)/cpu/m6502/dm65c02.lst $(r65c02_GEN)
+
+$(m65ce02_GEN): $(srcdir)/cpu/m6502/om65ce02.lst $(srcdir)/cpu/m6502/dm65ce02.lst
+	$(PERL) $(srcdir)/cpu/m6502/makehxx.pl m65ce02 $(srcdir)/cpu/m6502/om65ce02.lst $(srcdir)/cpu/m6502/dm65ce02.lst $(m65ce02_GEN)
 
 
 # The following flags are used by PiTubeDirect Co Pros:
