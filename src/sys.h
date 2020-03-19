@@ -35,4 +35,6 @@ void dumpregs(void);
 //TODO: should return main cpu pc at start of instruction
 extern uint16_t cpu_cur_op_pc;
 
+void sys_sound_fillbuf(int16_t *buffer, int len);
+
 #endif

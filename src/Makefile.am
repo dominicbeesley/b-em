@@ -6,7 +6,7 @@ VPATH = $(srcdir) $(builddir)
 bin_PROGRAMS = b-em hdfmt jstest gtest cpu_test1
 noinst_SCRIPTS = ../b-em$(EXEEXT)
 
-noinst_LIBRARIES = lib_m6502.a
+noinst_LIBRARIES = lib_m6502.a lib_blitter.a
 
 CLEANFILES = $(noinst_SCRIPTS) $(m6502_GEN) 
 
@@ -36,6 +36,27 @@ lib_m6502_a_CFLAGS = -I$(srcdir) -I$(srcdir)/cpu/m6502 -I$(builddir)/cpu/m6502
 lib_m6502_a_CPPFLAGS = $(lib_m6502_a_CFLAGS)
 
 
+lib_blitter_a_SOURCES = \
+	blitter/blitter_top.cpp \
+	blitter/fbsla_jimctrl.cpp \
+	blitter/fbsla_memctl.cpp \
+	blitter/fbsla_mem_chipram.cpp \
+	blitter/fbsla_mem_flash.cpp \
+	blitter/fb_abs_master.cpp \
+	blitter/fb_abs_resettable.cpp \
+	blitter/fb_abs_slave.cpp \
+	blitter/fb_abs_tickable.cpp \
+	blitter/fb_cpu.cpp \
+	blitter/fb_dmac_dma.cpp \
+	blitter/fb_intcon.cpp \
+	blitter/fb_paula.cpp \
+	blitter/fb_slave_default.cpp \
+	blitter/fb_sys.cpp 
+
+lib_blitter_a_CFLAGS = -I$(srcdir) -I$(srcdir)/cpu/m6502 -I$(builddir)/cpu/m6502 -I$(srcdir)/blitter
+lib_blitter_a_CPPFLAGS = $(lib_m6502_a_CFLAGS)
+
+
 $(m6502_GEN): $(srcdir)/cpu/m6502/om6502.lst $(srcdir)/cpu/m6502/dm6502.lst
 	$(PERL) $(srcdir)/cpu/m6502/makehxx.pl m6502 $(srcdir)/cpu/m6502/om6502.lst $(srcdir)/cpu/m6502/dm6502.lst $(m6502_GEN)
 
@@ -54,7 +75,7 @@ $(m65ce02_GEN): $(srcdir)/cpu/m6502/om65ce02.lst $(srcdir)/cpu/m6502/dm65ce02.ls
 #   INCLUDE_DEBUGGER - include the cpu_debug implementation
 # USE_MEMORY_POINTER - do not assume Co Pro memory starts at address 0
 
-b_em_CFLAGS = $(allegro_CFLAGS) -DBEM -DINCLUDE_DEBUGGER -DUSE_MEMORY_POINTER -I$(srcdir) -I$(srcdir)/cpu/m6502 -I$(builddir)/cpu/m6502
+b_em_CFLAGS = $(allegro_CFLAGS) -DBEM -DINCLUDE_DEBUGGER -DUSE_MEMORY_POINTER -I$(srcdir) -I$(srcdir)/cpu/m6502 -I$(builddir)/cpu/m6502 -I$(srcdir)/blitter
 b_em_CPPFLAGS = $(b_em_CFLAGS)
 
 cpu_test1_CFLAGS = $(allegro_CFLAGS) -DBEM -DINCLUDE_DEBUGGER -DUSE_MEMORY_POINTER -I$(srcdir) -I$(srcdir)/cpu/m6502 -I$(builddir)/cpu/m6502
@@ -65,11 +86,10 @@ cpu_test1_LDADD = lib_m6502.a
 
 # workaround for Win32 Allegro, which has `allegro-config' missing
 if OS_WIN
-b_em_LDADD = lib_m6502.a -lallegro_audio -lallegro_acodec -lallegro_primitives -lallegro_dialog -lallegro_image -lallegro_font -lallegro -lz -lm
+b_em_LDADD = lib_m6502.a lib_blitter.a -lallegro_audio -lallegro_acodec -lallegro_primitives -lallegro_dialog -lallegro_image -lallegro_font -lallegro -lz -lm
 else
-b_em_LDADD = lib_m6502.a -lallegro_audio -lallegro_acodec -lallegro_primitives -lallegro_dialog -lallegro_image -lallegro_font -lallegro_main -lallegro -lz -lm -lpthread
+b_em_LDADD = lib_m6502.a lib_blitter.a -lallegro_audio -lallegro_acodec -lallegro_primitives -lallegro_dialog -lallegro_image -lallegro_font -lallegro_main -lallegro -lz -lm -lpthread
 endif
-
 
 #	6502.c 
 

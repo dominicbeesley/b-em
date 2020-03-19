@@ -1,0 +1,12 @@
+
+
+
+ROM mapping
+===========
+
+To better fit in with the default BeebEm ROM set up the ROMPG value is 
+massaged before being passed to the SYS to always be in the range 0x0C-0x0F 
+to select the top 4 ROM banks rather than 4-7 as on the beeb. The "SYS" roms
+still appear as ROMs 4-7 in *ROMS
+
+

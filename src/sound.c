@@ -10,6 +10,7 @@
 #include "uservia.h"
 #include "music5000.h"
 #include "paula.h"
+#include "sys.h"
 
 bool sound_internal = false, sound_beebsid = false, sound_dac = false;
 bool sound_ddnoise = false, sound_tape = false;
@@ -76,6 +77,7 @@ void sound_poll(void)
             sound_buffer[sound_pos]     += (((int)lpt_dac - 0x80) * 32);
             sound_buffer[sound_pos + 1] += (((int)lpt_dac - 0x80) * 32);
         }
+        sys_sound_fillbuf(sound_buffer + sound_pos, 2);
 
         // skip forward 2 mono samples
         sound_pos += 2;

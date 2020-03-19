@@ -8,6 +8,7 @@
 
 #include "m6502.h"
 #include "m65c02.h"
+#include "blitter_top.h"
 extern "C" {
 #include "b-em.h"
 #include "sys.h"
@@ -36,7 +37,9 @@ extern "C" {
 #include "wd1770.h"
 }
 
-m6502_device *cpu = NULL;
+m65x_device *cpu = NULL;
+m6502_device *cpu_debug = NULL;
+blitter_top *blitter = NULL;
 
 static int dbg_core6502 = 0;
 
@@ -76,20 +79,22 @@ static uint32_t dbg_disassemble(uint32_t addr, char *buf, size_t bufsize) {
 
 
 static uint32_t dbg_reg_get(int which) {
+    if (!cpu_debug)
+        return -1;
     switch (which)
     {
     case REG_A:
-        return cpu->getA();
+        return cpu_debug->getA();
     case REG_X:
-        return cpu->getX();
+        return cpu_debug->getX();
     case REG_Y:
-        return cpu->getY();
+        return cpu_debug->getY();
     case REG_S:
-        return cpu->getSP();
+        return cpu_debug->getSP();
     case REG_P:
-        return 0x30 | cpu->getP();
+        return 0x30 | cpu_debug->getP();
     case REG_PC:
-        return cpu->getPC();
+        return cpu_debug->getPC();
     default:
         log_warn("6502: attempt to get non-existent register");
         return 0;
@@ -97,25 +102,27 @@ static uint32_t dbg_reg_get(int which) {
 }
 
 static void dbg_reg_set(int which, uint32_t value) {
+    if (!cpu_debug)
+        return;
     switch (which)
     {
     case REG_A:
-        cpu->setA(value);
+        cpu_debug->setA(value);
         break;
     case REG_X:
-        cpu->setX(value);
+        cpu_debug->setX(value);
         break;
     case REG_Y:
-        cpu->setY(value);
+        cpu_debug->setY(value);
         break;
     case REG_S:
-        cpu->setSP(value);
+        cpu_debug->setSP(value);
         break;
     case REG_P:
-        cpu->setP(value);
+        cpu_debug->setP(value);
         break;
     case REG_PC:
-        cpu->setPC(value);
+        cpu_debug->setPC(value);
     default:
         log_warn("6502: attempt to get non-existent register");
     }
@@ -125,7 +132,7 @@ static size_t dbg_reg_print(int which, char *buf, size_t bufsize) {
     switch (which)
     {
     case REG_P:
-        return dbg6502_print_flags(cpu->getP(), buf, bufsize);
+        return dbg6502_print_flags(cpu_debug->getP(), buf, bufsize);
         break;
     case REG_PC:
     case REG_S:
@@ -298,7 +305,7 @@ static uint32_t do_readmem(uint32_t addr)
     if (addr >= 0x10000)
         return 0xFF;
 
-    if (cpu->getPC() == addr)
+    if (cpu_debug && cpu_debug->getPC() == addr)
         fetchc[addr] = 31;
     else
         readc[addr] = 31;
@@ -763,10 +770,14 @@ void sys_reset() {
     if (cpu)
         delete cpu;
 
-    if (x65c02)
+    cpu_debug = NULL;
+
+/*    if (x65c02)
         cpu = new m65c02_device();    
     else
-        cpu = new m6502_device();
+        cpu = new m6502_device();*/
+    blitter = new blitter_top();
+    cpu = blitter;
     cpu->init();
     cpu->reset();
 
@@ -867,16 +878,13 @@ void sys_exec() {
         polltime(1);
 
 
-        if (sync) {
-            //TODO: less?
-            if (otherstuffcount <= 0)
-                otherstuff_poll();
-            if (tube_exec && tubecycle) {
-                    tubecycles += (tubecycle * tube_multipler) >> 1;
-                    if (tubecycles > 3)
-                            tube_exec();
-                    tubecycle = 0;
-            }
+        if (otherstuffcount <= 0)
+            otherstuff_poll();
+        if (tube_exec && tubecycle) {
+                tubecycles += (tubecycle * tube_multipler) >> 1;
+                if (tubecycles > 3)
+                        tube_exec();
+                tubecycle = 0;
         }
 
     }
@@ -930,3 +938,7 @@ void hogrec_start(const char *filename) {
     hogrec_fp = fopen(filename, "wb");
 }
 
+void sys_sound_fillbuf(int16_t *buffer, int len) {
+    if (blitter)
+        blitter->sound_fillbuf(buffer, len);
+}
