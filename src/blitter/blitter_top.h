@@ -72,6 +72,7 @@ public:
 
 	void init() override;
 	bool tick() override;
+	bool tick(int skip);
 	void reset() override;
 
 
@@ -146,8 +147,6 @@ protected:
 	uint8_t reg_blturbo;
 
 	void tick_int(bool sys);
-	void tock_int();
-
 };
 
 

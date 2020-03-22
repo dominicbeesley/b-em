@@ -732,6 +732,9 @@ void writemem(uint16_t addr, uint8_t val)
     do_writemem(addr, val);
 }
 
+enum class cpu_contains { cpu_default = 0, cpu_6502, cpu_65c02, cpu_blitter };
+
+cpu_contains cpu_prev = cpu_contains::cpu_default;
 
 void sys_reset() {
 
@@ -766,19 +769,26 @@ void sys_reset() {
     nmi = 0;
     prev_nmi = 0;
 
-    //TODO: properly - only works for model B
-    if (cpu)
-        delete cpu;
+    cpu_contains cpu_now = cpu_contains::cpu_blitter;
 
-    cpu_debug = NULL;
+    if (cpu_now != cpu_prev || cpu == NULL)
+    {
 
-/*    if (x65c02)
-        cpu = new m65c02_device();    
-    else
-        cpu = new m6502_device();*/
-    blitter = new blitter_top();
-    cpu = blitter;
-    cpu->init();
+        //TODO: properly - only works for model B
+        if (cpu)
+            delete cpu;
+
+        cpu_debug = NULL;
+
+        /*    if (x65c02)
+            cpu = new m65c02_device();    
+        else
+            cpu = new m6502_device();*/
+        blitter = new blitter_top();
+        cpu = blitter;
+        cpu->init();
+    }
+    cpu_prev = cpu_now;
     cpu->reset();
 
     if (hogrec_fp) {
@@ -831,6 +841,7 @@ static void otherstuff_poll(void) {
 void sys_exec() {
 
     cycles += 40000;
+    int precycle = cycles+1;
 
     while (cycles > 0)
     {
@@ -859,7 +870,15 @@ void sys_exec() {
                 fwrite((const char *)&d[0], 1, 2, hogrec_fp);
             }
 
-            cpu->tick();
+            if (blitter)
+            {
+                
+                blitter->tick(precycle-cycles-1);
+            }
+            else
+                cpu->tick();
+
+            precycle = cycles;
 
             uint16_t a = cpu->getADDR();
 

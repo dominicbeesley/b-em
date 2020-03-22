@@ -105,6 +105,19 @@ void blitter_top::tick_int(bool sysCycle) {
 
 bool blitter_top::tick()
 {
+	return tick(0);
+}
+
+bool blitter_top::tick(int skip)
+{
+	while (skip-- > 0)
+	{
+		// skip sys cycle - the bbc is having a stretch
+		tick_int(false);
+		tick_int(false);
+		tick_int(false);
+		tick_int(false);
+	}
 	tick_int(true);
 	tick_int(false);
 	tick_int(false);
