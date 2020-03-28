@@ -51,7 +51,8 @@ lib_blitter_a_SOURCES = \
 	blitter/fb_intcon.cpp \
 	blitter/fb_paula.cpp \
 	blitter/fb_slave_default.cpp \
-	blitter/fb_sys.cpp 
+	blitter/fb_sys.cpp \
+	blitter/fb_blitter.cpp
 
 lib_blitter_a_CFLAGS = -I$(srcdir) -I$(srcdir)/cpu/m6502 -I$(builddir)/cpu/m6502 -I$(srcdir)/blitter
 lib_blitter_a_CPPFLAGS = $(lib_m6502_a_CFLAGS)

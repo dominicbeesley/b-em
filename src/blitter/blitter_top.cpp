@@ -56,8 +56,6 @@ blit_SLAVE_NO blitter_top::addr2slaveno(uint32_t addr) {
 void blitter_top::init()
 {
 
-
-
 	intcon.getMas(SLAVE_NO_JIMCTL)->init(jimctl);
 	jimctl.init(*intcon.getMas(SLAVE_NO_JIMCTL));
 
@@ -79,6 +77,9 @@ void blitter_top::init()
 	intcon.getMas(SLAVE_NO_DMA)->init(dma.getSlave());
 	dma.getSlave().init(*intcon.getMas(SLAVE_NO_DMA));
 
+	intcon.getMas(SLAVE_NO_BLIT)->init(blitter.getSlave());
+	blitter.getSlave().init(*intcon.getMas(SLAVE_NO_BLIT));
+
 
 	intcon.getSla(MAS_NO_PAULA)->init(paula.getMaster());
 	paula.getMaster().init(*intcon.getSla(MAS_NO_PAULA));
@@ -86,6 +87,8 @@ void blitter_top::init()
 	intcon.getSla(MAS_NO_DMA)->init(dma.getMaster());
 	dma.getMaster().init(*intcon.getSla(MAS_NO_DMA));
 
+	intcon.getSla(MAS_NO_BLIT)->init(blitter.getMaster());
+	blitter.getMaster().init(*intcon.getSla(MAS_NO_BLIT));
 
 	intcon.getSla(MAS_NO_CPU)->init(cpu);
 	cpu.init(*intcon.getSla(MAS_NO_CPU));
@@ -100,6 +103,7 @@ void blitter_top::tick_int(bool sysCycle) {
 	cpu.tick(sysCycle);
 	paula.tick(sysCycle);
 	dma.tick(sysCycle);
+	blitter.tick(sysCycle);
 	flash.tick(sysCycle);
 }
 
@@ -162,6 +166,7 @@ void blitter_top::reset()
 	jimctl.reset();
 	paula.reset();
 	dma.reset();
+	blitter.reset();
 
 	intcon.reset();
 

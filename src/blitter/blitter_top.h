@@ -24,6 +24,7 @@
 #include "fbsla_memctl.h"
 #include "fb_paula.h"
 #include "fb_dmac_dma.h"
+#include "fb_blitter.h"
 
 typedef enum blit_SLAVE_NO {
 	SLAVE_NO_JIMCTL,
@@ -33,8 +34,8 @@ typedef enum blit_SLAVE_NO {
 	SLAVE_NO_MEMCTL,
 	SLAVE_NO_EEPROM,
 	SLAVE_NO_DMA,
-	SLAVE_NO_SOUND,
 	SLAVE_NO_BLIT,
+	SLAVE_NO_SOUND,
 	SLAVE_NO_AERIS,
 	SLAVE_NO__COUNT
 } blit_SLAVE_NO;
@@ -43,6 +44,7 @@ typedef enum blit_MAS_NO {
 	MAS_NO_CPU,
 	MAS_NO_PAULA,
 	MAS_NO_DMA,
+	MAS_NO_BLIT,
 	MAS_NO_COUNT
 } blit_MAS_NO;
 
@@ -64,7 +66,8 @@ public:
 		memctl(*this),
 		intcon(*this, MAS_NO_COUNT, SLAVE_NO__COUNT),
 		paula(),
-		dma(*this)
+		dma(*this),
+		blitter(*this)
 	{
 		powerReset();
 		reset();
@@ -138,6 +141,7 @@ protected:
 	fbsla_memctl memctl;
 	fb_paula paula;
 	fb_dmac_dma dma;
+	fb_blitter blitter;
 
 	fb_intcon intcon;
 
