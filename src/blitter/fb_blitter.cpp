@@ -1,5 +1,7 @@
 #include "fb_blitter.h"
 
+#include <iostream>
+
 fb_blitter::~fb_blitter()
 {
 }
@@ -132,12 +134,12 @@ void fb_blitter::gotByte(uint8_t channel, int8_t dat)
 void fb_blitter::write_regs(uint8_t addr, uint8_t dat)
 {
 
-	switch(addr) {
+	switch(addr - A_BLIT_BASE) {
 		case A_BLITOFFS_BLTCON:
 			if (dat & 0x80) {
 				r_BLTCON_act = true;
 				r_BLTCON_cell = dat & 0x40;
-				r_BLTCON_mode = (blitter_bppmode)(dat >> 4);
+				r_BLTCON_mode = (blitter_bppmode)((dat >> 4) & 0x03);
 				r_BLTCON_line = dat & 0x08;
 				r_BLTCON_collision = dat & 0x04;
 				r_BLTCON_wrap = dat & 0x02;
@@ -232,7 +234,94 @@ void fb_blitter::write_regs(uint8_t addr, uint8_t dat)
 }
 
 uint8_t fb_blitter::read_regs(uint8_t addr) {
+	switch (addr - A_BLIT_BASE) {
+		case A_BLITOFFS_BLTCON :
+			return 	(r_BLTCON_act?0x80:0x00) +
+				(r_BLTCON_cell?0x40:0x00) +
+				(((uint8_t)r_BLTCON_mode) << 4) +
+				(r_BLTCON_line?0x08:0x00) +
+				(r_BLTCON_collision?0x04:0x00) +
+				(r_BLTCON_wrap?0x02:0x00);
+		case A_BLITOFFS_FUNCGEN :
+			return r_FUNCGEN;
+		case A_BLITOFFS_WIDTH :
+			return r_width;
+		case A_BLITOFFS_HEIGHT :			
+			return r_height;
+		case A_BLITOFFS_SHIFT :
+			return (r_shift_B << 4) | r_shift_A;
+		case A_BLITOFFS_MASK_FIRST :
+			return r_mask_first;
+		case A_BLITOFFS_MASK_LAST :
+			return r_mask_last;
+		case A_BLITOFFS_DATA_A :
+			return r_cha_A_data;
+		case A_BLITOFFS_ADDR_A :				
+			return BANK8(r_cha_A_addr);
+		case A_BLITOFFS_ADDR_A + 1 :
+			return HI8(r_cha_A_addr);
+		case A_BLITOFFS_ADDR_A + 2 :
+			return LO8(r_cha_A_addr);
+		case A_BLITOFFS_DATA_B :
+			return r_cha_B_data;
+		case A_BLITOFFS_ADDR_B :
+			return BANK8(r_cha_B_addr);
+		case A_BLITOFFS_ADDR_B + 1 :
+			return HI8(r_cha_B_addr);
+		case A_BLITOFFS_ADDR_B + 2 :
+			return LO8(r_cha_B_addr);
+		case A_BLITOFFS_ADDR_C :
+			return BANK8(r_cha_C_addr);
+		case A_BLITOFFS_ADDR_C + 1 :
+			return HI8(r_cha_C_addr);
+		case A_BLITOFFS_ADDR_C + 2 :
+			return LO8(r_cha_C_addr);
+		case A_BLITOFFS_ADDR_D :
+			return BANK8(r_cha_D_addr);
+		case A_BLITOFFS_ADDR_D + 1 :
+			return HI8(r_cha_D_addr);
+		case A_BLITOFFS_ADDR_D + 2 :
+			return LO8(r_cha_D_addr);
+		case A_BLITOFFS_ADDR_E :
+			return BANK8(r_cha_E_addr);
+		case A_BLITOFFS_ADDR_E + 1 :
+			return HI8(r_cha_E_addr);
+		case A_BLITOFFS_ADDR_E + 2 :
+			return LO8(r_cha_E_addr);
+		case A_BLITOFFS_STRIDE_A :
+			return HI8(r_cha_A_stride);
+		case A_BLITOFFS_STRIDE_A + 1 :
+			return LO8(r_cha_A_stride);
+		case A_BLITOFFS_STRIDE_B :
+			return STRIDE_HI_GET(r_cha_B_stride);
+		case A_BLITOFFS_STRIDE_B + 1 :
+			return LO8(r_cha_B_stride);
+		case A_BLITOFFS_STRIDE_C :
+			return STRIDE_HI_GET(r_cha_C_stride);
+		case A_BLITOFFS_STRIDE_C + 1 :
+			return LO8(r_cha_C_stride);
+		case A_BLITOFFS_STRIDE_D :
+			return STRIDE_HI_GET(r_cha_D_stride);
+		case A_BLITOFFS_STRIDE_D + 1 :
+			return LO8(r_cha_D_stride);		
 
+		case A_BLITOFFS_ADDR_D_MIN :
+			return BANK8(r_cha_D_addr_min);
+		case A_BLITOFFS_ADDR_D_MIN + 1 :
+			return HI8(r_cha_D_addr_min);
+		case A_BLITOFFS_ADDR_D_MIN + 2 :
+			return LO8(r_cha_D_addr_min);
+
+		case A_BLITOFFS_ADDR_D_MAX :
+			return BANK8(r_cha_D_addr_max);
+		case A_BLITOFFS_ADDR_D_MAX + 1 :
+			return HI8(r_cha_D_addr_max);
+		case A_BLITOFFS_ADDR_D_MAX + 2 :
+			return LO8(r_cha_D_addr_max);
+
+		default:
+			return 0xFF;
+	}
 }
 
 void fb_blitter_sla::init(fb_abs_master & mas)
@@ -385,4 +474,6 @@ inline uint16_t fb_blitter::blit_addr_next(
 		else if (i_addr_next < addr_min)
 			i_addr_next = i_addr_next - addr_min + addr_max;
 	}
+
+	return i_addr_next;
 }

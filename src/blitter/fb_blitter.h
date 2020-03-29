@@ -18,6 +18,7 @@
 	- combined slave interface for all channels and global registers
 */
 
+const int A_BLIT_BASE = 0x60;
 const int A_BLITOFFS_BLTCON 	= 0x00;
 const int A_BLITOFFS_FUNCGEN 	= 0x01;
 const int A_BLITOFFS_WIDTH 	= 0x02;
@@ -240,6 +241,10 @@ private:
 	inline void STRIDE_HI_SET(uint16_t &reg, uint8_t v) {
 		reg = ((reg & 0x00FF) | ((uint16_t)v) << 8) & BLIT_STRIDE_MASK;
 	}
+	inline uint8_t STRIDE_HI_GET(uint16_t v) {
+		return (v & BLIT_STRIDE_MASK) >> 8;
+	}
+
 	inline void STRIDE_LO_SET(uint16_t &reg, uint8_t v) {
 		reg = ((reg & 0xFF00) | ((uint16_t)v));
 	}
@@ -251,6 +256,16 @@ private:
 	}
 	inline void ADDR_LO_SET(uint32_t &reg, uint8_t v) {
 		 reg = reg & 0xFFFF00 | ((uint32_t)v) << 0;
+	}
+
+	inline uint8_t BANK8(uint32_t v) {
+		return v >> 16;
+	}
+	inline uint8_t HI8(uint32_t v) {
+		return v >> 8;
+	}
+	inline uint8_t LO8(uint32_t v) {
+		return v;
 	}
 };
 
