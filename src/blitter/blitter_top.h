@@ -52,7 +52,8 @@ typedef enum blit_MAS_NO {
 typedef enum {
 	compno_SYS,
 	compno_DMA,
-	compno_COUNT
+	compno_COUNT,
+	compno_BLIT
 } compno_t;
 
 class blitter_top : public m65x_device {

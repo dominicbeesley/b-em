@@ -3,6 +3,8 @@
 
 #pragma once
 
+//TODO: aeries halt input
+
 
 #include "fb_abs_tickable.h"
 #include "fb_abs_master.h"
@@ -41,6 +43,7 @@ const int A_BLITOFFS_ADDR_D_MIN = 0x40;
 const int A_BLITOFFS_ADDR_D_MAX = 0x43;
 
 const uint16_t BLIT_STRIDE_MASK = 0x07FF;
+const int BLIT_STRIDE_HI_BIT = 11;
 
 class fb_blitter;
 class blitter_top;
@@ -85,9 +88,10 @@ public:
 
 protected:
 
-	enum fb_blitter_mas_state {idle, act} state;
+	enum fb_blitter_mas_state {idle, act, act_wr} state;
 
-	bool getByte(uint32_t addr, uint8_t channel);
+	bool getByte(uint32_t addr);
+	bool setByte(uint32_t addr, uint8_t dat);
 
 private:
 	fb_blitter& blitter;
@@ -95,15 +99,8 @@ private:
 	// connected slave
 
 	uint32_t cur_addr;
-	uint8_t cur_chan;
 };
 
-enum class blitter_bppmode {
-	bpp_1 = 0x00,
-	bpp_2 = 0x01,
-	bpp_4 = 0x02,
-	bpp_8 = 0x03
-};
 
 class fb_blitter : public fb_abs_tickable
 {
@@ -122,9 +119,16 @@ public:
 	friend fb_blitter_mas;
 	friend fb_blitter_sla;
 
+	enum class blitter_bppmode {
+		bpp_1 = 0x00,
+		bpp_2 = 0x01,
+		bpp_4 = 0x02,
+		bpp_8 = 0x03
+	};
+
 
 protected:
-	void gotByte(uint8_t channel, int8_t dat);
+	void gotByte(int8_t dat);
 
 	enum class state_type {
 		sIdle		// waiting for act to be set
@@ -166,6 +170,17 @@ protected:
 	state_type r_blit_state;
 	state_cha_A r_accA_state_cur;
 
+	uint8_t r_line_pxmaskcur;
+	bool r_clken_addr_calc_start;
+	bool r_data_ready;
+	uint8_t r_data_read;
+	bool r_cha_A_last_mask;
+	bool r_cha_A_first;
+	uint8_t r_y_count;
+	bool r_line_minor;
+	uint8_t r_row_countdn;
+
+
 	/* user accessible registers */
 	// bltcon/act
 
@@ -204,10 +219,10 @@ protected:
 
 	//note all the stride values are actually only 12 bits, except for A which is used for line
 	//slope	
-	uint16_t r_cha_A_stride; 		// stride A needs to be at least 16 bit for line slopes
-	uint16_t r_cha_B_stride;
-	uint16_t r_cha_C_stride;
-	uint16_t r_cha_D_stride;
+	int16_t r_cha_A_stride; 		// stride A needs to be at least 16 bit for line slopes
+	int16_t r_cha_B_stride;
+	int16_t r_cha_C_stride;
+	int16_t r_cha_D_stride;
 
 	// actuall only 3 bits
 	uint8_t r_shift_A;
@@ -221,7 +236,7 @@ protected:
 	inline uint16_t blit_addr_next(
 		blit_addr_direction 	direction,
 		bool			mode_cell,
-		uint16_t		bytes_stride,
+		int16_t			bytes_stride,
 		uint8_t			width,
 		bool			wrap,
 		uint16_t		addr_in,
@@ -229,6 +244,19 @@ protected:
 		uint16_t		addr_max
 	);
 
+	inline blit_addr_direction fnDirection(bool spr_last, bool line_major);
+	inline uint8_t get_chaA_shifted1();
+	inline uint8_t get_chaA_masked();
+	inline uint8_t get_chaA_shifted2();
+	inline uint8_t get_chaA_explode();
+	inline uint8_t get_chaA_width_in_bytes();
+	inline uint8_t get_chaB_shifted();
+	inline uint8_t get_funcgen_data();
+	inline state_type get_state_next();
+	inline state_cha_A get_accA_state_next();
+	inline bool get_main_last();
+	inline bool get_cha_A_last();
+	inline uint16_t get_next_addr_blit();
 private:
 	fb_blitter_sla sla;
 	fb_blitter_mas mas;
@@ -238,14 +266,20 @@ private:
 	void write_regs(uint8_t addr, uint8_t dat);
 	uint8_t read_regs(uint8_t addr);
 
-	inline void STRIDE_HI_SET(uint16_t &reg, uint8_t v) {
-		reg = ((reg & 0x00FF) | ((uint16_t)v) << 8) & BLIT_STRIDE_MASK;
+	inline void STRIDE_HI_SET(int16_t &reg, uint8_t v) {
+
+		v &= (BLIT_STRIDE_MASK >> 8);
+		//sign extend
+		if (v & (1 << BLIT_STRIDE_HI_BIT))
+			v |= ~(BLIT_STRIDE_MASK);
+
+		reg = ((reg & 0x00FF) | ((uint16_t)v) << 8);
 	}
 	inline uint8_t STRIDE_HI_GET(uint16_t v) {
 		return (v & BLIT_STRIDE_MASK) >> 8;
 	}
 
-	inline void STRIDE_LO_SET(uint16_t &reg, uint8_t v) {
+	inline void STRIDE_LO_SET(int16_t &reg, uint8_t v) {
 		reg = ((reg & 0xFF00) | ((uint16_t)v));
 	}
 	inline void ADDR_BANK_SET(uint32_t &reg, uint8_t v) {
@@ -267,6 +301,11 @@ private:
 	inline uint8_t LO8(uint32_t v) {
 		return v;
 	}
+
+	inline void ADDR_16_SET(uint32_t reg, uint16_t val) {
+		reg = (reg & 0xFF0000) | val;
+	}
+
 };
 
 
