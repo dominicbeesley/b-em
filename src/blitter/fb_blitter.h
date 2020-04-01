@@ -303,7 +303,7 @@ private:
 		return v;
 	}
 
-	inline void ADDR_16_SET(uint32_t reg, uint16_t val) {
+	inline void ADDR_16_SET(uint32_t &reg, uint16_t val) {
 		reg = (reg & 0xFF0000) | val;
 	}
 
