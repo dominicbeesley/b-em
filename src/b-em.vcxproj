@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -70,6 +70,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>USE_MEMORY_POINTER;BEM;WIN32;INCLUDE_DEBUGGER;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>UNICODE;_UNICODE;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>blitter;cpu/m6502</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -89,6 +90,7 @@
       <PreprocessorDefinitions>VERSION=20b6862;USE_MEMORY_POINTER;BEM;WIN32;INCLUDE_DEBUGGER;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>UNICODE;_UNICODE;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>blitter;cpu/m6502</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -102,7 +104,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="6502.h" />
     <ClInclude Include="6502debug.h" />
     <ClInclude Include="6502tube.h" />
     <ClInclude Include="65816.h" />
@@ -112,11 +113,44 @@
     <ClInclude Include="arm.h" />
     <ClInclude Include="b-em.h" />
     <ClInclude Include="bbctext.h" />
+    <ClInclude Include="blitter\blitter_const.h" />
+    <ClInclude Include="blitter\blitter_top.h" />
+    <ClInclude Include="blitter\fbsla_jimctrl.h" />
+    <ClInclude Include="blitter\fbsla_memctl.h" />
+    <ClInclude Include="blitter\fbsla_mem_chipram.h" />
+    <ClInclude Include="blitter\fbsla_mem_flash.h" />
+    <ClInclude Include="blitter\fb_abs_master.h" />
+    <ClInclude Include="blitter\fb_abs_resettable.h" />
+    <ClInclude Include="blitter\fb_abs_slave.h" />
+    <ClInclude Include="blitter\fb_abs_tickable.h" />
+    <ClInclude Include="blitter\fb_blitter.h" />
+    <ClInclude Include="blitter\fb_cpu.h" />
+    <ClInclude Include="blitter\fb_dmac_dma.h" />
+    <ClInclude Include="blitter\fb_fishbone.h" />
+    <ClInclude Include="blitter\fb_intcon.h" />
+    <ClInclude Include="blitter\fb_paula.h" />
+    <ClInclude Include="blitter\fb_slave_default.h" />
+    <ClInclude Include="blitter\fb_sys.h" />
     <ClInclude Include="cmos.h" />
     <ClInclude Include="compactcmos.h" />
     <ClInclude Include="compact_joystick.h" />
     <ClInclude Include="compat_wrappers.h" />
     <ClInclude Include="config.h" />
+    <ClInclude Include="cpu\m6502\devcpu.h" />
+    <ClInclude Include="cpu\m6502\m6502.gen.h" />
+    <ClInclude Include="cpu\m6502\m6502.h" />
+    <ClInclude Include="cpu\m6502\m6502_top.gen.h" />
+    <ClInclude Include="cpu\m6502\m65c02.gen.h" />
+    <ClInclude Include="cpu\m6502\m65c02.h" />
+    <ClInclude Include="cpu\m6502\m65c02_top.gen.h" />
+    <ClInclude Include="cpu\m6502\m65ce02.gen.h" />
+    <ClInclude Include="cpu\m6502\m65ce02.h" />
+    <ClInclude Include="cpu\m6502\m65ce02_top.gen.h" />
+    <ClInclude Include="cpu\m6502\m65sc02.h" />
+    <ClInclude Include="cpu\m6502\m65x_device.h" />
+    <ClInclude Include="cpu\m6502\r65c02.gen.h" />
+    <ClInclude Include="cpu\m6502\r65c02.h" />
+    <ClInclude Include="cpu\m6502\r65c02_top.gen.h" />
     <ClInclude Include="cpu_debug.h" />
     <ClInclude Include="csw.h" />
     <ClInclude Include="daa.h" />
@@ -201,7 +235,6 @@
     <ResourceCompile Include="b-em.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="6502.c" />
     <ClCompile Include="6502debug.c" />
     <ClCompile Include="6502tube.c" />
     <ClCompile Include="65816.c" />
@@ -209,11 +242,36 @@
     <ClCompile Include="acia.c" />
     <ClCompile Include="adc.c" />
     <ClCompile Include="arm.c" />
+    <ClCompile Include="blitter\blitter_top.cpp" />
+    <ClCompile Include="blitter\fbsla_jimctrl.cpp" />
+    <ClCompile Include="blitter\fbsla_memctl.cpp" />
+    <ClCompile Include="blitter\fbsla_mem_chipram.cpp" />
+    <ClCompile Include="blitter\fbsla_mem_flash.cpp" />
+    <ClCompile Include="blitter\fb_abs_master.cpp" />
+    <ClCompile Include="blitter\fb_abs_resettable.cpp" />
+    <ClCompile Include="blitter\fb_abs_slave.cpp" />
+    <ClCompile Include="blitter\fb_abs_tickable.cpp" />
+    <ClCompile Include="blitter\fb_blitter.cpp" />
+    <ClCompile Include="blitter\fb_cpu.cpp" />
+    <ClCompile Include="blitter\fb_dmac_dma.cpp" />
+    <ClCompile Include="blitter\fb_intcon.cpp" />
+    <ClCompile Include="blitter\fb_paula.cpp" />
+    <ClCompile Include="blitter\fb_slave_default.cpp" />
+    <ClCompile Include="blitter\fb_sys.cpp" />
     <ClCompile Include="cmos.c" />
     <ClCompile Include="compactcmos.c" />
     <ClCompile Include="compact_joystick.c" />
     <ClCompile Include="compat_wrappers.c" />
     <ClCompile Include="config.c" />
+    <ClCompile Include="cpu\m6502\m6502.cpp" />
+    <ClCompile Include="cpu\m6502\m6502x.gen.cpp" />
+    <ClCompile Include="cpu\m6502\m65c02x.gen.cpp" />
+    <ClCompile Include="cpu\m6502\m65ce02.cpp" />
+    <ClCompile Include="cpu\m6502\m65ce02x.gen.cpp" />
+    <ClCompile Include="cpu\m6502\m65sc02.cpp" />
+    <ClCompile Include="cpu\m6502\m65x_device.cpp" />
+    <ClCompile Include="cpu\m6502\r65c02.cpp" />
+    <ClCompile Include="cpu\m6502\r65c02x.gen.cpp" />
     <ClCompile Include="csw.c" />
     <ClCompile Include="darm\armv7-tbl.c" />
     <ClCompile Include="darm\armv7.c" />
@@ -284,7 +342,7 @@
     <ClCompile Include="serial.c" />
     <ClCompile Include="sn76489.c" />
     <ClCompile Include="sound.c" />
-    <ClCompile Include="sys.c" />
+    <ClCompile Include="sys.cpp" />
     <ClCompile Include="sysacia.c" />
     <ClCompile Include="sysvia.c" />
     <ClCompile Include="tape.c" />
@@ -306,7 +364,80 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="b-em.ico" />
+    <None Include="cpu\m6502\dm6502.lst" />
+    <None Include="cpu\m6502\dm65c02.lst" />
+    <None Include="cpu\m6502\dm65ce02.lst" />
+    <CustomBuild Include="cpu\m6502\dr65c02.lst">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">perl cpu\m6502\makehxx.pl r65c02 - %(Fullpath) cpu\m6502\r65c02.gen.h cpu\m6502\r65c02_top.gen.h cpu\m6502\r65c02x.gen.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">perl cpu\m6502\makehxx.pl r65c02 - %(Fullpath) cpu\m6502\r65c02.gen.h cpu\m6502\r65c02_top.gen.h cpu\m6502\r65c02x.gen.cpp</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\m6502.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\m6502.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\m6502_top.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\m6502_top.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\m6502x.gen.cpp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\m6502x.gen.cpp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\dm6502.lst</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\dm6502.lst</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\makehxx.pl</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\makehxx.pl</AdditionalInputs>
+    </CustomBuild>
+    <None Include="cpu\m6502\makehxx.pl" />
+    <CustomBuild Include="cpu\m6502\om6502.lst">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">perl cpu\m6502\makehxx.pl m6502 %(Fullpath)  cpu\m6502\dm6502.lst cpu\m6502\m6502.gen.h cpu\m6502\m6502_top.gen.h cpu\m6502\m6502x.gen.cpp</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\m6502.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\m6502_top.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\m6502x.gen.cpp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\dm6502.lst</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\makehxx.pl</AdditionalInputs>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">perl cpu\m6502\makehxx.pl m6502 %(Fullpath)  cpu\m6502\dm6502.lst cpu\m6502\m6502.gen.h cpu\m6502\m6502_top.gen.h cpu\m6502\m6502x.gen.cpp</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\m6502.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\m6502_top.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\m6502x.gen.cpp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\dm6502.lst</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\makehxx.pl</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="cpu\m6502\om65c02.lst">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">perl cpu\m6502\makehxx.pl m65c02 %(Fullpath)  cpu\m6502\dm65c02.lst cpu\m6502\m65c02.gen.h cpu\m6502\m65c02_top.gen.h cpu\m6502\m65c02x.gen.cpp</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\m65c02.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\m65c02x.gen.cpp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\dm65c02.lst</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\makehxx.pl</AdditionalInputs>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">perl cpu\m6502\makehxx.pl m65c02 %(Fullpath)  cpu\m6502\dm65c02.lst cpu\m6502\m65c02.gen.h cpu\m6502\m65c02_top.gen.h cpu\m6502\m65c02x.gen.cpp</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\m65c02.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\m65c02_top.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\m65c02x.gen.cpp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\dm65c02.lst</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\makehxx.pl</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="cpu\m6502\om65ce02.lst">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">perl cpu\m6502\makehxx.pl m65ce02 %(Fullpath)  cpu\m6502\dm65ce02.lst cpu\m6502\m65ce02.gen.h cpu\m6502\m65ce02_top.gen.h cpu\m6502\m65ce02x.gen.cpp</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\m65ce02.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\m65ce02x.gen.cpp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\dm65ce02.lst</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cpu\m6502\makehxx.pl</AdditionalInputs>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">perl cpu\m6502\makehxx.pl m65ce02 %(Fullpath)  cpu\m6502\dm65ce02.lst cpu\m6502\m65ce02.gen.h cpu\m6502\m65ce02_top.gen.h cpu\m6502\m65ce02x.gen.cpp</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\m65ce02.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\m65ce02_top.gen.h</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\m65ce02x.gen.cpp</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\dm65ce02.lst</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cpu\m6502\makehxx.pl</AdditionalInputs>
+    </CustomBuild>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="blitter\blitter-differences.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

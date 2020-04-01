@@ -463,7 +463,7 @@ void i8271_callback()
 
                 default: break;
                 printf("Unknown 8271 command %02X 3\n", i8271.command);
-                dumpregs();
+                //dumpregs();
                 exit(-1);
         }
 }

@@ -35,6 +35,7 @@ extern "C" {
 #include "vdfs.h"
 #include "video.h"
 #include "wd1770.h"
+#include "cpu_debug.h"
 }
 
 m65x_device *cpu = NULL;
@@ -148,13 +149,15 @@ static void dbg_reg_parse(int which, const char *str) {
     dbg_reg_set(which, value);
 }
 
+
+
 static uint32_t dbg_disassemble(uint32_t addr, char *buf, size_t bufsize);
 
 static uint32_t dbg_get_instr_addr() {
     return cpu_cur_op_pc;
 }
 
-
+/*
 cpu_debug_t core6502_cpu_debug = {
     .cpu_name = "core6502",
     .debug_enable = dbg_debug_enable,
@@ -168,6 +171,24 @@ cpu_debug_t core6502_cpu_debug = {
     .reg_parse = dbg_reg_parse,
     .get_instr_addr = dbg_get_instr_addr,
     .trap_names = trap_names
+};
+*/
+
+cpu_debug_t core6502_cpu_debug = {
+    "core6502",
+    dbg_debug_enable,
+    do_readmem,
+    do_writemem,
+    NULL,
+    NULL,
+    dbg_disassemble,
+    dbg6502_reg_names,
+    dbg_reg_get,
+    dbg_reg_set,
+    dbg_reg_print,
+    dbg_reg_parse,
+    dbg_get_instr_addr,
+    trap_names
 };
 
 

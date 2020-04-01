@@ -162,9 +162,6 @@
     <ClInclude Include="sys.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="6502.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="6502tube.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -297,6 +294,105 @@
     <ClInclude Include="x86_tube.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cpu\m6502\devcpu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\m65c02.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\m65ce02.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\m65sc02.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\m65x_device.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\m6502.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\r65c02.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\blitter_const.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\blitter_top.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fb_abs_master.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fb_abs_resettable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fb_abs_slave.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fb_abs_tickable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fb_blitter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fb_cpu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fb_dmac_dma.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fb_fishbone.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fb_intcon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fb_paula.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fb_slave_default.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fb_sys.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fbsla_jimctrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fbsla_mem_chipram.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fbsla_mem_flash.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blitter\fbsla_memctl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\r65c02_top.gen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\r65c02.gen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\m65c02.gen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\m65c02_top.gen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\m65ce02.gen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\m65ce02_top.gen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\m6502.gen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cpu\m6502\m6502_top.gen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="b-em.rc">
@@ -304,9 +400,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="6502.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="6502tube.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -607,7 +700,82 @@
     <ClCompile Include="paula.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sys.c">
+    <ClCompile Include="sys.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\m6502\m65ce02.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\m6502\m65sc02.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\m6502\m65x_device.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\m6502\m6502.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\m6502\r65c02.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\blitter_top.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fb_abs_master.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fb_abs_resettable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fb_abs_slave.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fb_abs_tickable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fb_blitter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fb_cpu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fb_dmac_dma.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fb_intcon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fb_paula.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fb_slave_default.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fb_sys.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fbsla_jimctrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fbsla_mem_chipram.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fbsla_mem_flash.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blitter\fbsla_memctl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\m6502\r65c02x.gen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\m6502\m65c02x.gen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\m6502\m65ce02x.gen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cpu\m6502\m6502x.gen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -616,5 +784,18 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="cpu\m6502\makehxx.pl" />
+    <None Include="cpu\m6502\dm65c02.lst" />
+    <None Include="cpu\m6502\dm65ce02.lst" />
+    <None Include="cpu\m6502\dm6502.lst" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="cpu\m6502\dr65c02.lst" />
+    <CustomBuild Include="cpu\m6502\om6502.lst" />
+    <CustomBuild Include="cpu\m6502\om65c02.lst" />
+    <CustomBuild Include="cpu\m6502\om65ce02.lst" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="blitter\blitter-differences.txt" />
   </ItemGroup>
 </Project>

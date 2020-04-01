@@ -53,3 +53,6 @@ src/cpu/testasm/test-rom0.map
 src/cpu/testasm/test-rom0.mos
 src/cpu/testasm/test-rom0.sy2
 src/cpu/testasm/test-rom0.sym.noi
+src/cpu/m6502/*.gen.h
+src/cpu/m6502/*.gen.cpp
+
