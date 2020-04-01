@@ -30,7 +30,7 @@ void fb_dmac_dma::reset()
 		p->count_clken = false;
 		p->pause_ct_dn = 0;
 		p->pause_ct_dn_finished = false;
-
+		p->state = sIdle;
 		p++;
 	}
 	update_cpu();
@@ -43,17 +43,24 @@ void fb_dmac_dma::tick(bool sys)
 {
 
 
-	dma_channelreg_t *curchan = channel_regs;
 	   
 	//this is a very rough approximation of what really happens in terms of prioritisation
 	//but should be close enough - normally data accesses that clash will be queued up
 	//by intcon and could take many 8M cycles but here we just always deliver the data!
 	for (int i = 0; i < DMA_CHANNELS; i++)
 	{
+		dma_channelreg_t *curchan = &channel_regs[i];
 		dma_state_type next_state = curchan->state;
 
+
 		if (next_state == sIdle)
-			continue;
+			if (curchan->ctl_act) {
+				next_state = sStart;
+			}
+			else
+				continue;
+
+		bool next_count_finish = curchan->count_finish;
 
 		if (curchan->data_started 
 			&& ( 
@@ -68,17 +75,17 @@ void fb_dmac_dma::tick(bool sys)
 			if (curchan->count != 0)
 				curchan->count--;
 			if (curchan->count == 0)
-				curchan->count_finish = true;
+				next_count_finish = true;
 		}
 
 
 		// work out next intended state
 		switch (curchan->state)
 		{
-		case sIdle:
+/*		case sIdle:
 			next_state = sStart;
 			break;
-		case sStart:
+*/		case sStart:
 			next_state = sMemAccSRC;
 			break;
 		case sMemAccSRC:
@@ -248,7 +255,10 @@ void fb_dmac_dma::tick(bool sys)
 			}
 		}
 
+		curchan->count_finish = next_count_finish;
+
 		curchan++;
+
 	}
 }
 
@@ -275,6 +285,7 @@ void fb_dmac_dma::byte_got(uint8_t channel, int8_t dat)
 
 void fb_dmac_dma::write_regs(uint8_t addr, uint8_t dat)
 {
+
 
 	uint8_t a = addr & 0x0F;
 
