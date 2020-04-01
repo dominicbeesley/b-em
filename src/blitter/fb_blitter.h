@@ -243,6 +243,7 @@ protected:
 		uint16_t		addr_min,
 		uint16_t		addr_max
 	);
+	const char *dirstr(blit_addr_direction a);
 
 	inline blit_addr_direction fnDirection(bool spr_last, bool line_major);
 	inline uint8_t get_chaA_shifted1();

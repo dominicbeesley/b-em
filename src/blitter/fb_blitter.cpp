@@ -72,13 +72,13 @@ void fb_blitter::tick(bool sys)
 	}
 
 	//p_ctl
-	top.setHALT(compno_BLIT, false);
 	if (r_blit_state == state_type::sStart) {
 		r_row_countdn = r_width; 				
 		r_y_count = r_height;
 		r_cha_A_first = true;
 		top.setHALT(compno_BLIT, true);
 		r_cha_A_last_mask = false;
+		std::cerr << "blit:started\n";
 	//} else if (fb_mas_s2m_i.ack = '1' or r_BLTCON_execD = '0') and r_blit_state = sMemAccD then
 	} else if (r_blit_state == state_type::sMemAccD) {
 		if (r_row_countdn == 0) {
@@ -93,9 +93,11 @@ void fb_blitter::tick(bool sys)
 //--					end if;
 		}
 	} else if (r_data_ready && r_blit_state == state_type::sMemAccA) {
-		r_cha_A_last_mask <= get_cha_A_last();	
-	} else if (r_blit_state == state_type::sFinish)
+		r_cha_A_last_mask = get_cha_A_last();	
+	} else if (r_blit_state == state_type::sFinish) {
 		top.setHALT(compno_BLIT, false);
+		std::cerr << "blit:finished\n";
+	}
 
 
 
@@ -136,7 +138,7 @@ void fb_blitter::tick(bool sys)
 		}
 
 		r_cha_A_addr = (r_cha_A_addr & 0xFF0000) | (uint32_t)v_err_acc;
-		r_line_minor <= v_reg_line_minor;
+		r_line_minor = v_reg_line_minor;
 
 	}
 
@@ -160,20 +162,25 @@ void fb_blitter::tick(bool sys)
 		switch (r_blit_state) {
 			case state_type::sMemAccA:
 				ADDR_16_SET(r_cha_A_addr, get_next_addr_blit());
+				std::cerr << "addr_A <= " << std::hex << (int)r_cha_A_addr << "\n";
 				break;
 			case state_type::sMemAccB:
 				ADDR_16_SET(r_cha_B_addr, get_next_addr_blit());
+				std::cerr << "addr_B <= " << std::hex << (int)r_cha_B_addr << "\n";
 				break;
 			case state_type::sMemAccC:
 			case state_type::sMemAccC_min:
 				ADDR_16_SET(r_cha_C_addr, get_next_addr_blit());
+				std::cerr << "addr_C <= " << std::hex << (int)r_cha_C_addr << "\n";
 				break;
 			case state_type::sMemAccD:
 			case state_type::sMemAccD_min: 
 				ADDR_16_SET(r_cha_D_addr, get_next_addr_blit());
+				std::cerr << "addr_D <= " << std::hex << (int)r_cha_D_addr << "\n";
 				break;
 			case state_type::sMemAccE: 
 				ADDR_16_SET(r_cha_E_addr, get_next_addr_blit());			
+				std::cerr << "addr_E <= " << std::hex << (int)r_cha_E_addr << "\n";
 				break;
 		}
 
@@ -195,7 +202,7 @@ void fb_blitter::tick(bool sys)
 	}
 	
 	if ((r_blit_state == state_type::sMemAccD) && get_funcgen_data() != 0)
-		r_BLTCON_collision <= '0';
+		r_BLTCON_collision = '0';
 
 	r_clken_addr_calc_start = next_r_clken_addr_calc_start;
 	r_accA_state_cur = next_r_accA_state_cur;
@@ -285,18 +292,18 @@ void fb_blitter::write_regs(uint8_t addr, uint8_t dat)
 			r_height = dat;
 			break;
 		case A_BLITOFFS_SHIFT: // TODO: maybe split to two addresses to make calcs easier?
-			r_shift_A <= dat & 0x07;
-			r_shift_B <= dat & (0x70) >> 4;
+			r_shift_A = dat & 0x07;
+			r_shift_B = dat & (0x70) >> 4;
 			break;
 		case A_BLITOFFS_MASK_FIRST:
-			r_mask_first <= dat;
+			r_mask_first = dat;
 			break;
 		case A_BLITOFFS_MASK_LAST:
-			r_mask_last <= dat;
+			r_mask_last = dat;
 			break;
 		case A_BLITOFFS_DATA_A:
-			r_cha_A_data_pre <= r_cha_A_data & 0x7F; //TODO: why?			
-			r_cha_A_data <= dat;
+			r_cha_A_data_pre = r_cha_A_data & 0x7F; //TODO: why?			
+			r_cha_A_data = dat;
 			break;
 		case A_BLITOFFS_ADDR_A + 0:
 			ADDR_BANK_SET(r_cha_A_addr, dat);
@@ -308,8 +315,8 @@ void fb_blitter::write_regs(uint8_t addr, uint8_t dat)
 			ADDR_LO_SET(r_cha_A_addr, dat);
 			break;
 		case A_BLITOFFS_DATA_B:
-			r_cha_B_data_pre <= r_cha_B_data & 0x7F; //TODO: why?			
-			r_cha_B_data <= dat;
+			r_cha_B_data_pre = r_cha_B_data & 0x7F; //TODO: why?			
+			r_cha_B_data = dat;
 			break;
 		case A_BLITOFFS_ADDR_B + 0:
 			ADDR_BANK_SET(r_cha_B_addr, dat);
@@ -534,6 +541,7 @@ void fb_blitter_mas::init(fb_abs_slave & sla)
 
 void fb_blitter_mas::fb_set_ACK(fb_ack ack)
 {
+	std::cerr << "fb_blitter_mas:ACK\n";
 	state = idle;
 	if (sla)
 		sla->fb_set_cyc(stop);
@@ -542,6 +550,7 @@ void fb_blitter_mas::fb_set_ACK(fb_ack ack)
 void fb_blitter_mas::fb_set_D_rd(uint8_t dat)
 {
 	if (state == act) {
+		std::cerr << "fb_blitter_mas:GOTBYTE\n";
 		blitter.gotByte(dat);
 	}
 }
@@ -554,6 +563,7 @@ void fb_blitter_mas::reset()
 bool fb_blitter_mas::getByte(uint32_t addr)
 {
 	if (state == idle) {
+		std::cerr << "fb_blitter_mas:getByte:" << std::hex << (int)addr << "\n";
 		if (sla) {
 			cur_addr = addr;
 			state = act;
@@ -571,6 +581,7 @@ bool fb_blitter_mas::getByte(uint32_t addr)
 
 bool fb_blitter_mas::setByte(uint32_t addr, uint8_t dat) {
 	if (state == idle) {
+		std::cerr << "fb_blitter_mas:setByte:" << std::hex << (int)addr << ":" << (int)dat << "\n";
 		if (sla) {
 			cur_addr = addr;
 			state = act_wr;
@@ -648,7 +659,18 @@ inline uint16_t fb_blitter::get_next_addr_blit() {
 	}
 }
 
-
+const char *fb_blitter::dirstr(blit_addr_direction a) {
+	switch (a) {
+		case blit_addr_direction::cha_e	: return "cha_e";
+	  	case blit_addr_direction::plot_up	: return "plot_up";
+	  	case blit_addr_direction::plot_down	: return "plot_down";
+		case blit_addr_direction::plot_right	: return "plot_right";
+		case blit_addr_direction::plot_left	: return "plot_left";
+		case blit_addr_direction::spr_wrap	: return "spr_wrap";
+	  	case blit_addr_direction::none	: return "none";
+	  	default		: return "fik";
+	}
+}
 
 //work.blit_addr component
 inline uint16_t fb_blitter::blit_addr_next(
@@ -662,6 +684,7 @@ inline uint16_t fb_blitter::blit_addr_next(
 		uint16_t		addr_max
 	) {
 		uint16_t i_addr_next;
+
 
 	if (mode_cell) {
 		switch (direction) {
@@ -699,25 +722,25 @@ inline uint16_t fb_blitter::blit_addr_next(
 	} else {
 		switch (direction) {
 			case blit_addr_direction::cha_e:  
-				i_addr_next <= addr_in + 1;
+				i_addr_next = addr_in + 1;
 			break;
 			case blit_addr_direction::spr_wrap: 
-				i_addr_next <= addr_in + bytes_stride - ((uint16_t)width);
+				i_addr_next = addr_in + bytes_stride - ((uint16_t)width);
 			break;
 			case blit_addr_direction::plot_up: 
-				i_addr_next <= addr_in - bytes_stride;
+				i_addr_next = addr_in - bytes_stride;
 			break;
 			case blit_addr_direction::plot_down: 
-				i_addr_next <= addr_in + bytes_stride;
+				i_addr_next = addr_in + bytes_stride;
 			break;
 			case blit_addr_direction::plot_left: 
-				i_addr_next <= addr_in - 1;
+				i_addr_next = addr_in - 1;
 			break;
 			case blit_addr_direction::plot_right: 
-				i_addr_next <= addr_in + 1;
+				i_addr_next = addr_in + 1;
 			break;
 			default: 
-				i_addr_next <= addr_in;
+				i_addr_next = addr_in;
 			break;
 		};
 	};
@@ -728,6 +751,15 @@ inline uint16_t fb_blitter::blit_addr_next(
 		else if (i_addr_next < addr_min)
 			i_addr_next = i_addr_next - addr_min + addr_max;
 	}
+
+	std::cerr << "nxt:" << std::hex
+		<< (int)addr_in 
+		<< "dir (" << dirstr(direction) << "),"
+		<< "cell (" << mode_cell << "),"
+		<< " => "
+		<< (int)i_addr_next
+		<< "\n";
+
 
 	return i_addr_next;
 }
