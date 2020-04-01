@@ -212,17 +212,17 @@ void fb_blitter::tick(bool sys)
 		case state_type::sMemAccA:
 			if (!mas.getByte(r_cha_A_addr)) {
 				next_r_blit_state = r_blit_state;
-			}
+			} 
 			break;
 		case state_type::sMemAccB:
 			if (!mas.getByte(r_cha_B_addr)) {
 				next_r_blit_state = r_blit_state;
-			}
+			} 
 			break;
 		case state_type::sMemAccC:
 			if (!mas.getByte(r_cha_C_addr)) {
 				next_r_blit_state = r_blit_state;
-			}
+			} 
 			break;
 		case state_type::sMemAccD:
 			{
@@ -564,6 +564,7 @@ bool fb_blitter_mas::getByte(uint32_t addr)
 {
 	if (state == idle) {
 		std::cerr << "fb_blitter_mas:getByte:" << std::hex << (int)addr << "\n";
+        blitter.r_data_ready = false;
 		if (sla) {
 			cur_addr = addr;
 			state = act;
@@ -585,7 +586,7 @@ bool fb_blitter_mas::setByte(uint32_t addr, uint8_t dat) {
 		if (sla) {
 			cur_addr = addr;
 			state = act_wr;
-			sla->fb_set_A(addr, 0);
+			sla->fb_set_A(addr, true);
 			sla->fb_set_cyc(start);
 			sla->fb_set_D_wr(dat);
 		}
@@ -840,7 +841,7 @@ inline uint8_t fb_blitter::get_chaA_shifted1() {
 
 inline uint8_t fb_blitter::get_chaA_masked() {
 	uint8_t sh1 = get_chaA_shifted1();
-	if (r_cha_A_last_mask and r_cha_A_first)
+	if (r_cha_A_last_mask && r_cha_A_first)
 		return sh1 & r_mask_last & r_mask_first;
 	else if (r_cha_A_last_mask)
 		return sh1 & r_mask_last;
@@ -924,9 +925,9 @@ inline uint8_t fb_blitter::get_funcgen_data() {
 			//minterms 
 			rb |= 
 				(r_FUNCGEN & mt)
-			&& (bool(a & i) != bool(mt & 4))
-			&& (bool(b & i) != bool(mt & 2))
-			&& (bool(r_cha_C_data & i) != bool(mt & 1));
+			&& (bool(a & i) != bool(m & 4))
+			&& (bool(b & i) != bool(m & 2))
+			&& (bool(r_cha_C_data & i) != bool(m & 1));
 
 			mt = mt << 1;
 		}
