@@ -56,3 +56,4 @@ src/cpu/testasm/test-rom0.sym.noi
 src/cpu/m6502/*.gen.h
 src/cpu/m6502/*.gen.cpp
 
+b-em-mg.exe

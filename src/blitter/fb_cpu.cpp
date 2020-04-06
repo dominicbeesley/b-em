@@ -21,12 +21,15 @@ void fb_cpu::tick(bool sys)
 		state = dotick;
 	} 
 
-	if (state == dotick) {
+	if (state == dotick || state == halt) {
 		if (cpu.tick()) {
 			state = idle;
-			sla->fb_set_cyc(stop);
-		}
-	}
+        }
+        else {
+            state = halt;
+        }
+        sla->fb_set_cyc(stop);
+    }
 
 	if (state == idle)
 	{

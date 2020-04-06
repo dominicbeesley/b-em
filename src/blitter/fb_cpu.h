@@ -31,7 +31,7 @@ protected:
 
 
 
-	enum cpu_state { idle, act, acked, dotick } state;
+	enum cpu_state { idle, act, acked, dotick, halt } state;
 
 	m6502_device cpu;
 

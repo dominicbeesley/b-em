@@ -57,6 +57,9 @@ void fb_blitter::reset()
     top.setHALT(compno_BLIT, false);
     r_cha_A_last_mask = false;
 
+    mas.reset();
+    sla.reset();
+
 }
 
 void fb_blitter::tick(bool sys)
@@ -67,198 +70,215 @@ void fb_blitter::tick(bool sys)
     state_cha_A next_r_accA_state_cur = r_accA_state_cur;
     state_type next_r_blit_state = r_blit_state;
     uint8_t next_r_row_countdn = r_row_countdn;
+    bool prev_r_data_ready = r_data_ready;
 
     // p_blit_state
     // slightly changed as we don't wait for ack's on writes
 
-    if (
-        !(r_blit_state == state_type::sMemAccA ||
-            r_blit_state == state_type::sMemAccB ||
-            r_blit_state == state_type::sMemAccC ||
-            r_blit_state == state_type::sMemAccD ||
-            r_blit_state == state_type::sMemAccE
-            ) || r_data_ready
-        ) {
-        next_r_accA_state_cur = get_accA_state_next();
-        next_r_blit_state = get_state_next();
-        next_r_clken_addr_calc_start = true;
+    bool donext = false;
 
-        //p_ctl
-        if (r_blit_state == state_type::sStart) {
-            next_r_row_countdn = r_width;
-            r_y_count = r_height;
-            r_cha_A_first = true;
-            top.setHALT(compno_BLIT, true);
-            r_cha_A_last_mask = false;
-            std::cerr << "blit:started\n";
-            //} else if (fb_mas_s2m_i.ack = '1' or r_BLTCON_execD = '0') and r_blit_state = sMemAccD then
-        }
-        else if (r_blit_state == state_type::sMemAccD) {
-            if (r_row_countdn == 0) {
-                next_r_row_countdn = r_width;
-                r_cha_A_first = true;
-                r_y_count = r_y_count - 1;
-            }
-            else {
-                next_r_row_countdn = r_row_countdn - 1;
-                //-- TODO: CHECK THIS thoroughly - seems to work!
-                //--					if i_state_next = sMemAccA then
-                r_cha_A_first = false;
-                //--					end if;
-            }
-        }
-        else if (r_data_ready && r_blit_state == state_type::sMemAccA) {
-            r_cha_A_last_mask = get_cha_A_last();
-        }
-        else if (r_blit_state == state_type::sFinish) {
-            top.setHALT(compno_BLIT, false);
-            std::cerr << "blit:finished\n";
-        }
-    }
+    if (r_blit_state == state_type::sMemAccPend)
+    {
+    	next_r_blit_state = r_blit_state_pend;
+        donext = true;
+    } else {
 
+	    if (
+	        !(r_blit_state == state_type::sMemAccA ||
+	            r_blit_state == state_type::sMemAccB ||
+	            r_blit_state == state_type::sMemAccC ||
+	            r_blit_state == state_type::sMemAccD ||
+	            r_blit_state == state_type::sMemAccE
+	            ) || prev_r_data_ready
+	        ) {
+	        next_r_accA_state_cur = get_accA_state_next();
+	        next_r_blit_state = get_state_next();
+	        next_r_clken_addr_calc_start = true;
+            donext = true;
 
-
-    //p_regs_wr
-    if (r_blit_state == state_type::sFinish)
-        r_BLTCON_act = false;
-
-    static uint16_t v_major_ctr;
-    static bool v_reg_line_minor;
-    static int16_t v_err_acc;
-
-
-    if (r_blit_state == state_type::sLineCalc) {
-        // count down major axis
-        v_major_ctr = ((((uint16_t)r_width) << 8) | r_height) - 1;
-        r_width = v_major_ctr >> 8;
-        r_height = (uint8_t)v_major_ctr;
-
-        // save this as the current pixel's mask
-        r_line_pxmaskcur = r_cha_A_data;
-
-        v_err_acc = ((int16_t)r_cha_A_addr) - ((int16_t)r_cha_A_stride);
-        v_reg_line_minor = false;
-        if (v_err_acc > 0) {
-            v_reg_line_minor = true;
-            v_err_acc = v_err_acc + ((int16_t)r_cha_B_addr);
-        }
-
-        // rotate the pixel mask if we need to
-        if (!((int)r_BLTCON_mode & 0x01)
-            || (v_reg_line_minor && ((int)r_BLTCON_mode & 0x02))
-            ) {
-            //roll right
-            r_cha_A_data = ((r_cha_A_data & 0x01) << 7) | (r_cha_A_data >> 1);
-        }
-        else if (((int)r_BLTCON_mode == 3) && v_reg_line_minor) {
-            // roll left
-            r_cha_A_data = (r_cha_A_data << 1) | (r_cha_A_data & 0x80) >> 7;
-        }
-
-        r_cha_A_addr = (r_cha_A_addr & 0xFF0000) | (uint32_t)v_err_acc;
-        r_line_minor = v_reg_line_minor;
-
-    }
+	        //p_ctl
+	        if (r_blit_state == state_type::sStart) {
+	            next_r_row_countdn = r_width;
+	            r_y_count = r_height;
+	            r_cha_A_first = true;
+	            top.setHALT(compno_BLIT, true);
+	            r_cha_A_last_mask = false;
+	            //std::cerr << "blit:started\n";
+	            //} else if (fb_mas_s2m_i.ack = '1' or r_BLTCON_execD = '0') and r_blit_state = sMemAccD then
+	        }
+	        else if (r_blit_state == state_type::sMemAccD) {
+	            if (r_row_countdn == 0) {
+	                next_r_row_countdn = r_width;
+	                r_cha_A_first = true;
+	                r_y_count = r_y_count - 1;
+	            }
+	            else {
+	                next_r_row_countdn = r_row_countdn - 1;
+	                //-- TODO: CHECK THIS thoroughly - seems to work!
+	                //--					if i_state_next = sMemAccA then
+	                r_cha_A_first = false;
+	                //--					end if;
+	            }
+	        }
+	        else if (prev_r_data_ready && r_blit_state == state_type::sMemAccA) {
+	            r_cha_A_last_mask = get_cha_A_last();
+	        }
+	        else if (r_blit_state == state_type::sFinish) {
+	            top.setHALT(compno_BLIT, false);
+	            //std::cerr << "blit:finished\n";
+	        }
+	    }
 
 
 
+	    //p_regs_wr
+	    if (r_blit_state == state_type::sFinish)
+	        r_BLTCON_act = false;
+
+	    static uint16_t v_major_ctr;
+	    static bool v_reg_line_minor;
+	    static int16_t v_err_acc;
 
 
-    if (
-        (r_data_ready && (
-            r_blit_state == state_type::sMemAccA ||
-            r_blit_state == state_type::sMemAccB ||
-            r_blit_state == state_type::sMemAccC ||
-            r_blit_state == state_type::sMemAccD ||
-            r_blit_state == state_type::sMemAccE
-            )
-            ) ||
-        r_blit_state == state_type::sMemAccC_min ||
-        r_blit_state == state_type::sMemAccD_min
-        ) {
+	    if (r_blit_state == state_type::sLineCalc) {
+	        // count down major axis
+	        v_major_ctr = ((((uint16_t)r_width) << 8) | r_height) - 1;
+	        r_width = v_major_ctr >> 8;
+	        r_height = (uint8_t)v_major_ctr;
 
-        // update addresses after a memory access
-        switch (r_blit_state) {
+	        // save this as the current pixel's mask
+	        r_line_pxmaskcur = r_cha_A_data;
+
+	        v_err_acc = ((int16_t)r_cha_A_addr) - ((int16_t)r_cha_A_stride);
+	        v_reg_line_minor = false;
+	        if (v_err_acc > 0) {
+	            v_reg_line_minor = true;
+	            v_err_acc = v_err_acc + ((int16_t)r_cha_B_addr);
+	        }
+
+	        // rotate the pixel mask if we need to
+	        if (!((int)r_BLTCON_mode & 0x01)
+	            || (v_reg_line_minor && ((int)r_BLTCON_mode & 0x02))
+	            ) {
+	            //roll right
+	            r_cha_A_data = ((r_cha_A_data & 0x01) << 7) | (r_cha_A_data >> 1);
+	        }
+	        else if (((int)r_BLTCON_mode == 3) && v_reg_line_minor) {
+	            // roll left
+	            r_cha_A_data = (r_cha_A_data << 1) | (r_cha_A_data & 0x80) >> 7;
+	        }
+
+	        r_cha_A_addr = (r_cha_A_addr & 0xFF0000) | (uint32_t)v_err_acc;
+	        r_line_minor = v_reg_line_minor;
+
+	    }
+
+
+
+
+
+	    if (
+	        (prev_r_data_ready && (
+	            r_blit_state == state_type::sMemAccA ||
+	            r_blit_state == state_type::sMemAccB ||
+	            r_blit_state == state_type::sMemAccC ||
+	            r_blit_state == state_type::sMemAccD ||
+	            r_blit_state == state_type::sMemAccE
+	            )
+	            ) ||
+	        r_blit_state == state_type::sMemAccC_min ||
+	        r_blit_state == state_type::sMemAccD_min
+	        ) {
+
+	        // update addresses after a memory access
+	        switch (r_blit_state) {
+	        case state_type::sMemAccA:
+	            ADDR_16_SET(r_cha_A_addr, get_next_addr_blit());
+	            //std::cerr << "addr_A <= " << std::hex << (int)r_cha_A_addr << "\n";
+	            break;
+	        case state_type::sMemAccB:
+	            ADDR_16_SET(r_cha_B_addr, get_next_addr_blit());
+	            //std::cerr << "addr_B <= " << std::hex << (int)r_cha_B_addr << "\n";
+	            break;
+	        case state_type::sMemAccC:
+	        case state_type::sMemAccC_min:
+	            ADDR_16_SET(r_cha_C_addr, get_next_addr_blit());
+	            //std::cerr << "addr_C <= " << std::hex << (int)r_cha_C_addr << "\n";
+	            break;
+	        case state_type::sMemAccD:
+	        case state_type::sMemAccD_min:
+	            ADDR_16_SET(r_cha_D_addr, get_next_addr_blit());
+	            //std::cerr << "addr_D <= " << std::hex << (int)r_cha_D_addr << "\n";
+	            break;
+	        case state_type::sMemAccE:
+	            ADDR_16_SET(r_cha_E_addr, get_next_addr_blit());
+	            //std::cerr << "addr_E <= " << std::hex << (int)r_cha_E_addr << "\n";
+	            break;
+	        }
+
+	        // update previous/next data after a memory access
+	        switch (r_blit_state) {
+	        case state_type::sMemAccA:
+	            r_cha_A_data_pre = r_cha_A_data & 0x7F;
+	            r_cha_A_data = r_data_read;
+	            break;
+	        case state_type::sMemAccB:
+	            r_cha_B_data_pre = r_cha_B_data & 0x7F;
+	            r_cha_B_data = r_data_read;
+	            break;
+	        case state_type::sMemAccC:
+	            r_cha_C_data = r_data_read;
+	            break;
+	        }
+	    }
+	}
+
+    if (donext) {
+        switch (next_r_blit_state)
+        {
         case state_type::sMemAccA:
-            ADDR_16_SET(r_cha_A_addr, get_next_addr_blit());
-            std::cerr << "addr_A <= " << std::hex << (int)r_cha_A_addr << "\n";
+            if (!mas.getByte(r_cha_A_addr)) {
+                r_blit_state_pend = next_r_blit_state;
+                next_r_blit_state = state_type::sMemAccPend;
+            }
             break;
         case state_type::sMemAccB:
-            ADDR_16_SET(r_cha_B_addr, get_next_addr_blit());
-            std::cerr << "addr_B <= " << std::hex << (int)r_cha_B_addr << "\n";
+            if (!mas.getByte(r_cha_B_addr)) {
+                r_blit_state_pend = next_r_blit_state;
+                next_r_blit_state = state_type::sMemAccPend;
+            }
             break;
         case state_type::sMemAccC:
-        case state_type::sMemAccC_min:
-            ADDR_16_SET(r_cha_C_addr, get_next_addr_blit());
-            std::cerr << "addr_C <= " << std::hex << (int)r_cha_C_addr << "\n";
+            if (!mas.getByte(r_cha_C_addr)) {
+                r_blit_state_pend = next_r_blit_state;
+                next_r_blit_state = state_type::sMemAccPend;
+            }
             break;
         case state_type::sMemAccD:
-        case state_type::sMemAccD_min:
-            ADDR_16_SET(r_cha_D_addr, get_next_addr_blit());
-            std::cerr << "addr_D <= " << std::hex << (int)r_cha_D_addr << "\n";
-            break;
-        case state_type::sMemAccE:
-            ADDR_16_SET(r_cha_E_addr, get_next_addr_blit());
-            std::cerr << "addr_E <= " << std::hex << (int)r_cha_E_addr << "\n";
-            break;
-        }
-
-        // update previous/next data after a memory access
-        switch (r_blit_state) {
-        case state_type::sMemAccA:
-            r_cha_A_data_pre = r_cha_A_data & 0x7F;
-            r_cha_A_data = r_data_read;
-            break;
-        case state_type::sMemAccB:
-            r_cha_B_data_pre = r_cha_B_data & 0x7F;
-            r_cha_B_data = r_data_read;
-            break;
-        case state_type::sMemAccC:
-            r_cha_C_data = r_data_read;
-            break;
-        }
-    }
-
-
-    switch (next_r_blit_state)
-    {
-    case state_type::sMemAccA:
-        if (!mas.getByte(r_cha_A_addr)) {
-            next_r_blit_state = r_blit_state;
-        }
-        break;
-    case state_type::sMemAccB:
-        if (!mas.getByte(r_cha_B_addr)) {
-            next_r_blit_state = r_blit_state;
-        }
-        break;
-    case state_type::sMemAccC:
-        if (!mas.getByte(r_cha_C_addr)) {
-            next_r_blit_state = r_blit_state;
-        }
-        break;
-    case state_type::sMemAccD:
-    {
-        uint8_t d = get_funcgen_data();
-        if (r_BLTCON_execD) {
-            if (!mas.setByte(r_cha_D_addr, d)) {
-                next_r_blit_state = r_blit_state;
+        {
+            uint8_t d = get_funcgen_data();
+            if (r_BLTCON_execD) {
+                if (!mas.setByte(r_cha_D_addr, d)) {
+                    r_blit_state_pend = next_r_blit_state;
+                    next_r_blit_state = state_type::sMemAccPend;
+                }
             }
-        }
-        else {
-            r_data_ready = true;
-        }
-        if (d != 0)
-            r_BLTCON_collision = false;
-    }
-    break;
-    case state_type::sMemAccE:
-        if (!mas.setByte(r_cha_E_addr, r_cha_C_data)) {
-            next_r_blit_state = r_blit_state;
+            else {
+                r_data_ready = true;
+            }
+            if (d != 0)
+                r_BLTCON_collision = false;
         }
         break;
-    }
+        case state_type::sMemAccE:
+            if (!mas.setByte(r_cha_E_addr, r_cha_C_data)) {
+                r_blit_state_pend = next_r_blit_state;
+                next_r_blit_state = state_type::sMemAccPend;
+            }
+            break;
+        }
 
+    }
 
     r_blit_state = next_r_blit_state;
     r_row_countdn = next_r_row_countdn;
@@ -277,18 +297,16 @@ void fb_blitter::gotByte(int8_t dat)
 {
     r_data_read = dat;
     r_data_ready = true;
-
 }
 
 void fb_blitter::write_regs(uint8_t addr, uint8_t dat)
 {
 
-    std::cerr << "BLT:" << std::hex << (int)addr << ":" << (int)dat << "\n";
-
+    //std::cerr << "BLT:" << std::hex << (int)addr << ":" << (int)dat << "\n";
 
     switch (addr - A_BLIT_BASE) {
     case A_BLITOFFS_BLTCON:
-        std::cerr << "BLTCON:" << std::hex << (int)dat << "\n";
+        //std::cerr << "BLTCON:" << std::hex << (int)dat << "\n";
         if (dat & 0x80) {
             r_BLTCON_act = true;
             r_BLTCON_cell = dat & 0x40;
@@ -564,7 +582,7 @@ void fb_blitter_mas::init(fb_abs_slave & sla)
 
 void fb_blitter_mas::fb_set_ACK(fb_ack ack)
 {
-    std::cerr << "fb_blitter_mas:ACK\n";
+    //std::cerr << "fb_blitter_mas:ACK\n";
     state = idle;
     if (sla)
         sla->fb_set_cyc(stop);
@@ -573,7 +591,7 @@ void fb_blitter_mas::fb_set_ACK(fb_ack ack)
 void fb_blitter_mas::fb_set_D_rd(uint8_t dat)
 {
     if (state == act) {
-        std::cerr << "fb_blitter_mas:GOTBYTE\n";
+        //std::cerr << "fb_blitter_mas:GOTBYTE\n";
         blitter.gotByte(dat);
     }
 }
@@ -587,7 +605,7 @@ bool fb_blitter_mas::getByte(uint32_t addr)
 {
     blitter.r_data_ready = false;
     if (state == idle) {
-        std::cerr << "fb_blitter_mas:getByte:" << std::hex << (int)addr << "\n";
+        //std::cerr << "fb_blitter_mas:getByte:" << std::hex << (int)addr << "\n";
         if (sla) {
             cur_addr = addr;
             state = act;
@@ -606,8 +624,7 @@ bool fb_blitter_mas::getByte(uint32_t addr)
 bool fb_blitter_mas::setByte(uint32_t addr, uint8_t dat) {
     blitter.r_data_ready = false;
     if (state == idle) {
-        std::cerr << "fb_blitter_mas:setByte:" << std::hex << (int)addr << ":" << (int)dat << "\n";
-        blitter.r_data_ready = false;
+        //std::cerr << "fb_blitter_mas:setByte:" << std::hex << (int)addr << ":" << (int)dat << "\n";
         if (sla) {
             cur_addr = addr;
             state = act_wr;
@@ -780,14 +797,14 @@ inline uint16_t fb_blitter::blit_addr_next(
             i_addr_next = i_addr_next - addr_min + addr_max;
     }
 
-    std::cerr << "nxt:" << std::hex
+/*    std::cerr << "nxt:" << std::hex
         << (int)addr_in
         << "dir (" << dirstr(direction) << "),"
         << "cell (" << mode_cell << "),"
         << " => "
         << (int)i_addr_next
         << "\n";
-
+*/
 
     return i_addr_next;
 }
@@ -1076,7 +1093,7 @@ inline fb_blitter::state_type fb_blitter::get_state_next() {
         return state_type::sIdle;
     case state_type::sIdle:
         if (r_BLTCON_act) {
-            std::cerr << "blit start\n";
+            //std::cerr << "blit start\n";
             return state_type::sStart;
         }
         else {

@@ -141,6 +141,7 @@ protected:
 	,	sMemAccC_min	// line only - second C exec to move minor axis
 	,	sMemAccD_min	// line only - second D exec to move minor axis
 	,	sMemAccE	// channel E write
+	,	sMemAccPend	// NOT IN FPGA - a read/write is being blocked in the master try again next tick
 	,  sFinish
 	};
 
@@ -168,7 +169,9 @@ protected:
 	/* state registers */
 
 	state_type r_blit_state;
+	state_type r_blit_state_pend; // used in sMemAccPend state
 	state_cha_A r_accA_state_cur;
+
 
 	uint8_t r_line_pxmaskcur;
 	bool r_clken_addr_calc_start;
