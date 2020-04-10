@@ -1009,8 +1009,8 @@ inline uint8_t fb_blitter::get_chaB_shifted() {
         break;
     case blitter_bppmode::bpp_4:
         if (r_shift_B & 0x1)
-            return 	(r_cha_B_data & 0xAA) >> 2 |
-            (r_cha_B_data_pre & 0x33) << 2;
+            return 	(r_cha_B_data & 0xAA) >> 1 |
+            (r_cha_B_data_pre & 0x55) << 1;
         else
             return r_cha_B_data;
     default:

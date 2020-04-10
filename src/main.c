@@ -74,6 +74,8 @@ static ALLEGRO_TIMER *timer;
 static ALLEGRO_EVENT_QUEUE *queue;
 static ALLEGRO_EVENT_SOURCE evsrc;
 
+static ALLEGRO_DISPLAY *tmp_display;
+
 typedef enum {
     FSPEED_NONE,
     FSPEED_SELECTED,
@@ -275,6 +277,8 @@ void main_init(int argc, char *argv[])
 
     joystick_init(queue);
 
+    tmp_display = display;
+
     gui_allegro_init(queue, display);
 
     time_limit = 2.0 / 50.0;
@@ -426,15 +430,22 @@ static void main_key_up(ALLEGRO_EVENT *event)
     key_up(code);
 }
 
+double prev_time = 0;
+int execs = 0;
+long prev_blitter_ticks = 0;
+double spd = 0;
+
 static void main_timer(ALLEGRO_EVENT *event)
 {
-    double delay = al_get_time() - event->any.timestamp;
+    double now = al_get_time();
+    double delay = now - event->any.timestamp;
     if (delay < time_limit) {
         if (autoboot)
             autoboot--;
         framesrun++;
 
         sys_exec();
+        execs++;
 
         if (ddnoise_ticks > 0 && --ddnoise_ticks == 0)
             ddnoise_headdown();
@@ -446,6 +457,29 @@ static void main_timer(ALLEGRO_EVENT *event)
         if (fullspeed == FSPEED_RUNNING)
             al_emit_user_event(&evsrc, event, NULL);
     }
+
+
+    if (now - prev_time > 0.1) {
+
+        double speed = execs * 40000 / (now - prev_time);
+        long blitter_ticks = get_blitter_ticks();
+
+        if (spd < 0.01)
+            spd = 100.0 * speed / 2000000;
+        else
+            spd = spd * 0.75 + 0.25 * (100.0 * speed / 2000000);
+
+        double speed_blit = (blitter_ticks - prev_blitter_ticks) / (now - prev_time);
+
+        char buf[120];
+        snprintf(buf, 120, "%.3fMHz %.3fMHz %.1f%%", speed/1000000, speed_blit/1000000, spd);
+        al_set_window_title(tmp_display, buf);
+
+        execs = 0;
+        prev_time = now;
+        prev_blitter_ticks = blitter_ticks;
+    }
+
 }
 
 void main_run()

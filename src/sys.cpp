@@ -894,7 +894,7 @@ void sys_exec() {
             if (blitter)
             {
                 
-                blitter->tick(precycle-cycles-1);
+                blitter->tick(precycle - cycles - 1);
             }
             else
                 cpu->tick();
@@ -981,4 +981,14 @@ void hogrec_start(const char *filename) {
 void sys_sound_fillbuf(int16_t *buffer, int len) {
     if (blitter)
         blitter->sound_fillbuf(buffer, len);
+}
+
+
+long get_blitter_ticks() {
+    if (blitter) {
+        return blitter->count_ticks;
+    }
+    else {
+        return 0;
+    }
 }

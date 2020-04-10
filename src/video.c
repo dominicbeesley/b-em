@@ -1227,3 +1227,4 @@ void video_loadstate(FILE * f)
     vidclocks = getc(f) << 16;
     vidclocks = getc(f) << 24;
 }
+

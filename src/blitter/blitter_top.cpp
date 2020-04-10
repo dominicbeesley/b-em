@@ -99,6 +99,8 @@ void blitter_top::init()
 
 void blitter_top::tick_int(bool sysCycle) {
 
+    count_ticks++;
+
 	sys.tick(sysCycle);
 	cpu.tick(sysCycle);
 	paula.tick(sysCycle);
@@ -109,7 +111,7 @@ void blitter_top::tick_int(bool sysCycle) {
 
 bool blitter_top::tick()
 {
-	return tick(0);
+	return tick((int)0);
 }
 
 bool blitter_top::tick(int skip)

@@ -37,4 +37,6 @@ extern uint16_t cpu_cur_op_pc;
 
 void sys_sound_fillbuf(int16_t *buffer, int len);
 
+long get_blitter_ticks();
+
 #endif

@@ -128,6 +128,8 @@ public:
 
 	void sound_fillbuf(int16_t *buffer, int len);
 
+    long count_ticks = 0;
+
 protected:
 
 	uint32_t bits_halt; //the opposite of RDY
