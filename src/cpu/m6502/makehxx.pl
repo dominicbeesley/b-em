@@ -1,4 +1,4 @@
-#!/bin/perl
+#!/usr/bin/perl
 
 use strict;
 
@@ -458,7 +458,7 @@ sub showtree($$) {
 
 sub expand_members($) {
 	my ($l) = @_;
-	$l =~ s/(\b[A-Z_]\w*\b(?<!(true|false|int8_t|uint8_t)\b))/cpu.\1/gi;
+	$l =~ s/(?!(true|false|int8_t|uint8_t))(\b[A-Z_]\w*\b)/cpu.\2/gi;
 	return $l;
 }
 
