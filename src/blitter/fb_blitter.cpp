@@ -963,23 +963,23 @@ inline uint8_t fb_blitter::get_chaA_width_in_bytes() {
 inline uint8_t fb_blitter::get_funcgen_data() {
     uint8_t a = get_chaA_explode();
     uint8_t b = get_chaB_shifted();
+    uint8_t c = r_cha_C_data;
     uint8_t r = 0;
-    for (uint8_t i = 0x80; i; i = i >> 1) {
-        //bits in data
-        uint8_t mt = 0x01;
-        bool rb = false;
-        for (int m = 0; m < 8; m++) {
-            //minterms 
-            rb |=
-                bool(r_FUNCGEN & mt)
-                && (bool(a & i) != !bool(m & 4))
-                && (bool(b & i) != !bool(m & 2))
-                && (bool(r_cha_C_data & i) != !bool(m & 1));
 
-            mt = mt << 1;
-        }
-        if (rb)
-            r |= i;
+    uint8_t mt = 0x01;
+    bool rb = false;
+    for (int m = 0; m < 8; m++) {
+        uint8_t m_4 = (m & 4) ? 0x00 : 0xFF;
+        uint8_t m_2 = (m & 2) ? 0x00 : 0xFF;
+        uint8_t m_1 = (m & 1) ? 0x00 : 0xFF;
+        //minterms 
+        if (r_FUNCGEN & mt)
+            r |=
+                (a ^ m_4)
+                & (b ^ m_2)
+                & (c  ^ m_1);
+
+        mt = mt << 1;
     }
     return r;
 }
