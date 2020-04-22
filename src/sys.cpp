@@ -38,6 +38,7 @@ extern "C" {
 #include "cpu_debug.h"
 }
 
+bool blitter_enable = false;
 m65x_device *cpu = NULL;
 m6502_device *cpu_debug = NULL;
 blitter_top *blitter = NULL;
@@ -790,7 +791,13 @@ void sys_reset() {
     nmi = 0;
     prev_nmi = 0;
 
-    cpu_contains cpu_now = cpu_contains::cpu_blitter;
+    cpu_contains cpu_now = cpu_contains::cpu_default;
+    if (blitter_enable)
+        cpu_now = cpu_contains::cpu_blitter;
+    else if (x65c02)
+        cpu_now = cpu_contains::cpu_65c02;
+    else
+        cpu_now = cpu_contains::cpu_6502;
 
     if (cpu_now != cpu_prev || cpu == NULL)
     {
@@ -801,13 +808,21 @@ void sys_reset() {
 
         cpu_debug = NULL;
 
-        /*    if (x65c02)
-            cpu = new m65c02_device();    
-        else
-            cpu = new m6502_device();*/
-        blitter = new blitter_top();
-        cpu = blitter;
+        if (cpu_now == cpu_contains::cpu_blitter)
+        {
+            blitter = new blitter_top();
+            cpu = blitter;
+        }
+        else {
+            if (x65c02)
+                cpu = new m65c02_device();
+            else
+                cpu = new m6502_device();
+            blitter = NULL;
+        }
         cpu->init();
+        cpu->execute_set_input(m65x_device::HALT_LINE, CLEAR_LINE);
+        cpu->execute_set_input(m65x_device::V_LINE, CLEAR_LINE);
     }
     cpu_prev = cpu_now;
     cpu->reset();

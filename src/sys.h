@@ -39,4 +39,6 @@ void sys_sound_fillbuf(int16_t *buffer, int len);
 
 long get_blitter_ticks();
 
+extern bool blitter_enable;
+
 #endif

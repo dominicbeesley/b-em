@@ -434,6 +434,13 @@ static ALLEGRO_MENU *create_joymap_menu(void)
     return menu;
 }
 
+static ALLEGRO_MENU *create_blitter_menu(void) {
+    ALLEGRO_MENU *menu = al_create_menu();
+    add_checkbox_item(menu, "Enable", IDM_BLITTER_ENABLE, blitter_enable);
+    return menu;
+}
+
+
 static ALLEGRO_MENU *create_settings_menu(void)
 {
     ALLEGRO_MENU *menu = al_create_menu();
@@ -444,10 +451,12 @@ static ALLEGRO_MENU *create_settings_menu(void)
 #endif
     al_append_menu_item(menu, "Keyboard", 0, 0, NULL, create_keyboard_menu());
     add_checkbox_item(menu, "Mouse (AMX)", IDM_MOUSE_AMX, mouse_amx);
+    al_append_menu_item(menu, "Blitter", 0, 0, NULL, create_blitter_menu());
     if (joymap_count > 0)
         al_append_menu_item(menu, "Joystick Map", 0, 0, NULL, create_joymap_menu());
     return menu;
 }
+
 
 static ALLEGRO_MENU *create_speed_menu(void)
 {
@@ -1209,5 +1218,11 @@ void gui_allegro_event(ALLEGRO_EVENT *event)
             break;
         case IDM_JOYMAP:
             joystick_change_joymap(radio_event_simple(event, joymap_num));
+            break;
+        case IDM_BLITTER_ENABLE:
+            blitter_enable = !blitter_enable;
+            main_reset();
+            update_rom_menu();
+            break;
     }
 }

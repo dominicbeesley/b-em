@@ -19,6 +19,7 @@
 #include "tube.h"
 #include "vdfs.h"
 #include "video_render.h"
+#include "sys.h"
 
 int curmodel;
 int selecttube = -1;
@@ -161,6 +162,8 @@ void config_load(void)
     mouse_amx        = get_config_bool(NULL, "mouse_amx",     0);
     kbdips           = get_config_int(NULL, "kbdips", 0);
 
+    blitter_enable = get_config_bool("blitter", "enable", 0);
+
     buflen_m5        = get_config_int("sound", "buflen_music5000", BUFLEN_M5);
 
     for (c = 0; c < ALLEGRO_KEY_MAX; c++) {
@@ -263,6 +266,8 @@ void config_save(void)
         set_config_bool(NULL, "key_as", keyas);
 
         set_config_bool(NULL, "mouse_amx", mouse_amx);
+
+        set_config_bool("blitter", "blitter_enable", blitter_enable);
 
         for (c = 0; c < 128; c++) {
             snprintf(t, sizeof t, "key_define_%03i", c);
