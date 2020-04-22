@@ -130,6 +130,8 @@ public:
 
     long count_ticks = 0;
 
+    m6502_device* get_cpu() { return cpu.get_cpu(); }
+
 protected:
 
 	uint32_t bits_halt; //the opposite of RDY

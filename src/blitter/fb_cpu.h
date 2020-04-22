@@ -27,6 +27,8 @@ public:
 
 	void execute_set_input(int inputnum, int state) { cpu.execute_set_input(inputnum, state); };
 
+    m6502_device *get_cpu() { return &cpu; };
+
 protected:
 
 

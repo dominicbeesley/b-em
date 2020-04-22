@@ -812,13 +812,15 @@ void sys_reset() {
         {
             blitter = new blitter_top();
             cpu = blitter;
+            cpu_debug = blitter->get_cpu();
         }
         else {
             if (x65c02)
-                cpu = new m65c02_device();
+                cpu = cpu_debug = new m65c02_device();
             else
-                cpu = new m6502_device();
+                cpu = cpu_debug = new m6502_device();
             blitter = NULL;
+            
         }
         cpu->init();
         cpu->execute_set_input(m65x_device::HALT_LINE, CLEAR_LINE);

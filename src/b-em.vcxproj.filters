@@ -682,9 +682,6 @@
     <ClCompile Include="tapecat-allegro.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vdfs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="x86dasm.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -776,6 +773,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cpu\m6502\m6502x.gen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vdfs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
