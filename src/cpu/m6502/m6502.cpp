@@ -416,6 +416,12 @@ void m6502_device_forceJMP(m6502_device &cpu) {
     m6502_device_fetch(cpu);
 }
 
+void m6502_device::forceJMP(uint16_t val)
+{
+    forceJMPaddr = val;
+    NextFn = (m65x_device::StatFn)&m6502_device_forceJMP;
+}
+
 
 
 

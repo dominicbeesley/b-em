@@ -61,10 +61,7 @@ public:
 	void setX(uint8_t val) { X = val; };
 	void setY(uint8_t val) { Y = val; };
 	void setP(uint8_t val) { P = val; };
-    void forceJMP(uint16_t val) {
-        forceJMPaddr = val;
-        NextFn = (m65x_device::StatFn)&m6502_device_forceJMP;
-    }
+    void forceJMP(uint16_t val);
 
 	enum {
 		F_N = 0x80,
