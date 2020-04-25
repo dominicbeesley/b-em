@@ -170,7 +170,7 @@ b_em_SOURCES = \
 	tube.c \
 	uef.c \
 	uservia.c \
-	vdfs.c \
+	vdfs.cpp \
 	via.c \
 	vidalleg.c \
 	video.c \

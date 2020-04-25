@@ -61,7 +61,10 @@ public:
 	void setX(uint8_t val) { X = val; };
 	void setY(uint8_t val) { Y = val; };
 	void setP(uint8_t val) { P = val; };
-
+    void forceJMP(uint16_t val) {
+        forceJMPaddr = val;
+        NextFn = (m65x_device::StatFn)&m6502_device_forceJMP;
+    }
 
 	enum {
 		F_N = 0x80,
@@ -86,6 +89,7 @@ protected:
 	friend void m6502_device_prefetch(m6502_device &cpu);
 	friend void m6502_device_fetch(m6502_device &cpu);
 	friend void m6502_device_fetch_noirq(m6502_device &cpu);
+    friend void m6502_device_forceJMP(m6502_device &cpu);
 
 
 	uint16_t  PC;                     /* program counter */
@@ -97,6 +101,7 @@ protected:
 	uint8_t   Y;                      /* Y index register */
 	uint8_t   P;                      /* Processor status */
 	uint8_t   IR;                     /* Prefetched instruction register */
+    uint16_t  forceJMPaddr;            /* special var for forced jmp */
 
 
 	bool	  skip_ints_next;			  /* Do not check for interrupts on this fetch*/

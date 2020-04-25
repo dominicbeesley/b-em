@@ -57,3 +57,6 @@ src/cpu/m6502/*.gen.h
 src/cpu/m6502/*.gen.cpp
 
 b-em-mg.exe
+src/vdfs.lst
+src/vdfs6
+src/version.asm

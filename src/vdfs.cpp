@@ -287,7 +287,7 @@ static void rom_dispatch(enum vdfs_action act)
 {
     int max = readmem(0x8000);
     if (act < max)
-        cpu_debug->setPC(readmem16(readmem16(0x8001) + (act << 1)));
+        cpu_debug->forceJMP(readmem16(readmem16(0x8001) + (act << 1)));
     else
         log_warn("vdfs: ROM does not support action %d, max is %d", act, max);
 }
@@ -451,7 +451,7 @@ static void adfs_error(const char *err)
         ch = *err++;
         writemem(addr++, ch);
     } while (ch);
-    cpu_debug->setPC(0x100);          // jump to BRK sequence just created.
+    cpu_debug->forceJMP(0x100);          // jump to BRK sequence just created.
 }
 
 static void adfs_hosterr(int errnum)
@@ -2442,7 +2442,7 @@ static void run_file(const char *err)
                 if (addr > 0xffff0000 || curtube == -1) {
                     log_debug("vdfs: run_file: writing to I/O proc memory at %08X", addr);
                     read_file_io(fp, addr);
-                    cpu_debug->setPC(ent->u.file.exec_addr);
+                    cpu_debug->forceJMP(ent->u.file.exec_addr);
                 } else {
                     log_debug("vdfs: run_file: writing to tube proc memory at %08X", addr);
                     writemem32(0xc0, ent->u.file.exec_addr); // set up for tube execution.

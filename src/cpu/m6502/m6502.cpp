@@ -398,6 +398,8 @@ void m6502_device_prefetch(m6502_device &cpu)
 	cpu.NextFn = (m65x_device::StatFn)cpu.PrefetchNextFn;
 }
 
+//TODO: speed up (don't mess around with PrefetchNextFn here?
+
 void m6502_device_fetch(m6502_device &cpu) {
 	cpu.PrefetchNextFn = (m65x_device::StatFn)&m6502_device_postfetch;
 	m6502_device_prefetch(cpu);
@@ -407,6 +409,11 @@ void m6502_device_fetch_noirq(m6502_device &cpu) {
 	cpu.skip_ints_next = true;
 	cpu.PrefetchNextFn = (m65x_device::StatFn)&m6502_device_postfetch;
 	m6502_device_prefetch(cpu);
+}
+
+void m6502_device_forceJMP(m6502_device &cpu) {
+    cpu.PC = cpu.forceJMPaddr;
+    m6502_device_fetch(cpu);
 }
 
 
