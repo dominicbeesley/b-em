@@ -70,6 +70,23 @@ void fb_intcon_sla::fb_set_A(uint32_t addr, bool we)
 	crossbar_idx = intcon.top.addr2slaveno(addr);
 }
 
+
+uint8_t fb_intcon_sla::peek(uint32_t addr) {
+    blit_SLAVE_NO ix = intcon.top.addr2slaveno(addr);
+    fb_abs_slave* sl = intcon.mas_a[ix]->sla;
+    if (sl)
+        return sl->peek(addr);
+    else
+        return 0;
+}
+
+void fb_intcon_sla::poke(uint32_t addr, uint8_t dat) {
+    blit_SLAVE_NO ix = intcon.top.addr2slaveno(addr);
+    fb_abs_slave* sl = intcon.mas_a[ix]->sla;
+    if (sl)
+        sl->poke(addr, dat);
+}
+
 void fb_intcon_sla::fb_set_D_wr(uint8_t dat)
 {
 	crossbar_d_wr = dat;

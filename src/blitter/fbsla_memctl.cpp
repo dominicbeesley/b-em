@@ -34,18 +34,35 @@ void fbsla_memctl::fb_set_cyc(fb_cyc_action cyc)
 		if (we)
 			state = actwaitwr;
 		else {
-			switch (addr & 0x0F)
-			{
-			case 7:
-				mas->fb_set_D_rd(top.get_blturbo());
-				break;
-			}
+            mas->fb_set_D_rd(peek(addr));
 			mas->fb_set_ACK(ack);
 			state = idle;
 		}
 	}
 
 }
+
+uint8_t fbsla_memctl::peek(uint32_t addr) {
+    switch (addr & 0x0F)
+    {
+    case 7:
+        return top.get_blturbo();
+        break;
+    default:
+        return 0xFF;
+        break;
+    }
+}
+
+void fbsla_memctl::poke(uint32_t addr, uint8_t dat) {
+    switch (addr & 0x0F)
+    {
+    case 7:
+        return top.set_blturbo(dat);
+        break;
+    }
+}
+
 
 void fbsla_memctl::fb_set_A(uint32_t addr, bool we)
 {

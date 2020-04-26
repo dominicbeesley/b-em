@@ -55,6 +55,14 @@ void fb_sys::fb_set_D_wr(uint8_t dat)
 	}
 }
 
+uint8_t fb_sys::peek(uint32_t addr) {
+    return (top.sys_readmem)(addr);
+}
+
+void fb_sys::poke(uint32_t addr, uint8_t dat) {
+    (*top.sys_writemem)(addr, dat);
+}
+
 void fb_sys::tick(bool sys)
 {
 	if (!mas)

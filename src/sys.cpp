@@ -810,7 +810,7 @@ void sys_reset() {
 
         if (cpu_now == cpu_contains::cpu_blitter)
         {
-            blitter = new blitter_top();
+            blitter = new blitter_top(readmem, writemem);
             cpu = blitter;
             cpu_debug = blitter->get_cpu();
         }
@@ -1008,4 +1008,18 @@ long get_blitter_ticks() {
     else {
         return 0;
     }
+}
+
+uint8_t peekmem(uint16_t addr) {
+    if (blitter) 
+        return blitter->peek(addr);
+    else
+        return readmem(addr);    
+}
+
+void pokemem(uint16_t addr, uint8_t dat) {
+    if (blitter)
+        return blitter->poke(addr, dat);
+    else
+        return writemem(addr, dat);
 }

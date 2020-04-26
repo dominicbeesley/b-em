@@ -56,10 +56,13 @@ typedef enum {
 	compno_BLIT
 } compno_t;
 
+typedef uint8_t (*readmem_t)(uint16_t addr);
+typedef void (*writemem_t)(uint16_t addr, uint8_t dat);
+
 class blitter_top : public m65x_device {
 public:
 
-	blitter_top() :
+	blitter_top(readmem_t rdmem, writemem_t wrmem) :
 		m65x_device(),
 		sys(*this),
 		cpu(*this),
@@ -68,7 +71,9 @@ public:
 		intcon(*this, MAS_NO_COUNT, SLAVE_NO__COUNT),
 		paula(),
 		dma(*this),
-		blitter(*this)
+		blitter(*this),
+        sys_readmem(rdmem),
+        sys_writemem(wrmem)
 	{
 		powerReset();
 		reset();
@@ -132,7 +137,13 @@ public:
 
     m6502_device* get_cpu() { return cpu.get_cpu(); }
 
+    uint8_t peek(uint16_t addr);
+    void poke(uint16_t addr, uint8_t dat);
+
 protected:
+
+    readmem_t sys_readmem;
+    writemem_t sys_writemem;
 
 	uint32_t bits_halt; //the opposite of RDY
 	uint32_t bits_irq; 

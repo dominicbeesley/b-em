@@ -18,15 +18,29 @@ void fbsla_jimctrl::fb_set_cyc(fb_cyc_action cyc)
 			state = actwaitwr;
 		else if (mas)
 		{
-			if ((addr & 0x0F) == 0x0E)
-				mas->fb_set_D_rd(top.get_JIMPAGE_L());
-			else if ((addr & 0x0F) == 0x0D)
-				mas->fb_set_D_rd(top.get_JIMPAGE_H());
+            mas->fb_set_D_rd(peek(addr));
 			mas->fb_set_ACK(ack);
 		}
 	}
 
 }
+
+uint8_t fbsla_jimctrl::peek(uint32_t addr) {
+    if ((addr & 0x0F) == 0x0E)
+        return top.get_JIMPAGE_L();
+    else if ((addr & 0x0F) == 0x0D)
+        return top.get_JIMPAGE_H();
+    else
+        return 0xFF;
+}
+
+void fbsla_jimctrl::poke(uint32_t addr, uint8_t dat) {
+    if ((addr & 0x0F) == 0x0E)
+        top.set_JIMPAGE_L(dat);
+    else if ((addr & 0x0F) == 0x0D)
+        top.set_JIMPAGE_H(dat);
+}
+
 
 void fbsla_jimctrl::fb_set_A(uint32_t addr, bool we)
 {

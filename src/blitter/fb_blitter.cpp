@@ -553,6 +553,14 @@ void fb_blitter_sla::fb_set_cyc(fb_cyc_action cyc)
 
 }
 
+uint8_t fb_blitter_sla::peek(uint32_t addr) {
+    return blitter.read_regs(addr);
+}
+
+void fb_blitter_sla::poke(uint32_t addr, uint8_t dat) {
+    blitter.write_regs(addr, dat);
+}
+
 void fb_blitter_sla::fb_set_A(uint32_t addr, bool we)
 {
     this->addr = addr;

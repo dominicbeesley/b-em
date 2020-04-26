@@ -24,6 +24,12 @@ void os_paste_start(char *str);
 uint8_t readmem(uint16_t addr);
 void writemem(uint16_t addr, uint8_t val);
 
+/*  peek / poke are similar to readmem/writemem except they always work in the
+    context of the current cpu which (for the blitter) may be different to readmem/writemem 
+*/
+uint8_t peekmem(uint16_t addr);
+void pokemem(uint16_t addr, uint8_t val);
+
 extern cpu_debug_t core6502_cpu_debug;
 
 //TODO: rename

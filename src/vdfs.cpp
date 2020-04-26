@@ -253,41 +253,41 @@ static uint8_t  fs_flags = 0;
 static uint8_t  fs_num   = 0;
 static uint16_t cmd_tail;
 
-static uint16_t readmem16(uint16_t addr)
+static uint16_t peekmem16(uint16_t addr)
 {
-    uint16_t value = readmem(addr);
-    value |= (readmem(addr+1) << 8);
+    uint16_t value = peekmem(addr);
+    value |= (peekmem(addr+1) << 8);
     return value;
 }
 
-static uint32_t readmem32(uint16_t addr)
+static uint32_t peekmem32(uint16_t addr)
 {
-    uint32_t value = readmem(addr);
-    value |= (readmem(addr+1) << 8);
-    value |= (readmem(addr+2) << 16);
-    value |= (readmem(addr+3) << 24);
+    uint32_t value = peekmem(addr);
+    value |= (peekmem(addr+1) << 8);
+    value |= (peekmem(addr+2) << 16);
+    value |= (peekmem(addr+3) << 24);
     return value;
 }
 
-static void writemem16(uint16_t addr, uint16_t value)
+static void pokemem16(uint16_t addr, uint16_t value)
 {
-    writemem(addr, value & 0xff);
-    writemem(addr+1, (value >> 8) & 0xff);
+    pokemem(addr, value & 0xff);
+    pokemem(addr+1, (value >> 8) & 0xff);
 }
 
-static void writemem32(uint16_t addr, uint32_t value)
+static void pokemem32(uint16_t addr, uint32_t value)
 {
-    writemem(addr, value & 0xff);
-    writemem(addr+1, (value >> 8) & 0xff);
-    writemem(addr+2, (value >> 16) & 0xff);
-    writemem(addr+3, (value >> 24) & 0xff);
+    pokemem(addr, value & 0xff);
+    pokemem(addr+1, (value >> 8) & 0xff);
+    pokemem(addr+2, (value >> 16) & 0xff);
+    pokemem(addr+3, (value >> 24) & 0xff);
 }
 
 static void rom_dispatch(enum vdfs_action act)
 {
-    int max = readmem(0x8000);
+    int max = peekmem(0x8000);
     if (act < max)
-        cpu_debug->forceJMP(readmem16(readmem16(0x8001) + (act << 1)));
+        cpu_debug->forceJMP(peekmem16(peekmem16(0x8001) + (act << 1)));
     else
         log_warn("vdfs: ROM does not support action %d, max is %d", act, max);
 }
@@ -446,10 +446,10 @@ static void adfs_error(const char *err)
     uint16_t addr = 0x100;
     int ch;
 
-    writemem(addr++, 0);  // BRK instruction.
+    pokemem(addr++, 0);  // BRK instruction.
     do {
         ch = *err++;
-        writemem(addr++, ch);
+        pokemem(addr++, ch);
     } while (ch);
     cpu_debug->forceJMP(0x100);          // jump to BRK sequence just created.
 }
@@ -804,16 +804,16 @@ static uint16_t parse_name(char *str, size_t size, uint16_t addr)
 
     log_debug("vdfs: parse_name: addr=%04x\n", addr);
     do
-        ch = readmem(addr++);
+        ch = peekmem(addr++);
     while (ch == ' ' || ch == '\t');
 
     if (ch == '"') {
         quote = 1;
-        ch = readmem(addr++);
+        ch = peekmem(addr++);
     }
     while (ptr < end && ch != '\r' && (ch != '"' || !quote) && (ch != ' ' || quote)) {
         *ptr++ = ch & 0x7f;
-        ch = readmem(addr++);
+        ch = peekmem(addr++);
     }
 
     *ptr = '\0';
@@ -1242,11 +1242,11 @@ static void exec_swr_fs(uint8_t flags, uint16_t fname, int8_t romid, uint32_t st
 static void osword_swr_fs(void)
 {
     uint16_t pb = (cpu_debug->getY() << 8) | cpu_debug->getX();
-    uint8_t flags  = readmem(pb);
-    uint16_t fname = readmem16(pb+1);
-    int8_t   romid = readmem(pb+3);
-    uint32_t start = readmem16(pb+4);
-    uint16_t pblen = readmem16(pb+6);
+    uint8_t flags  = peekmem(pb);
+    uint16_t fname = peekmem16(pb+1);
+    int8_t   romid = peekmem(pb+3);
+    uint32_t start = peekmem16(pb+4);
+    uint16_t pblen = peekmem16(pb+6);
 
     exec_swr_fs(flags, fname, romid, start, pblen);
 }
@@ -1262,10 +1262,10 @@ static void exec_swr_ram(uint8_t flags, uint32_t ram_start, uint16_t len, uint32
         if (ram_start > 0xffff0000 || curtube == -1) {
             if (flags & 0x80)
                 while (len--)
-                    *rom_ptr++ = readmem(ram_start++);
+                    *rom_ptr++ = peekmem(ram_start++);
             else
                 while (len--)
-                    writemem(ram_start++, *rom_ptr++);
+                    pokemem(ram_start++, *rom_ptr++);
         }
         else {
             if (flags & 0x80)
@@ -1281,11 +1281,11 @@ static void exec_swr_ram(uint8_t flags, uint32_t ram_start, uint16_t len, uint32
 static void osword_swr_ram(void)
 {
     uint16_t pb = (cpu_debug->getY() << 8) | cpu_debug->getX();
-    uint8_t  flags     = readmem(pb);
-    uint32_t ram_start = readmem32(pb+1);
-    uint16_t len       = readmem16(pb+5);
-    int8_t   romid     = readmem(pb+7);
-    uint32_t sw_start  = readmem16(pb+4);
+    uint8_t  flags     = peekmem(pb);
+    uint32_t ram_start = peekmem32(pb+1);
+    uint16_t len       = peekmem16(pb+5);
+    int8_t   romid     = peekmem(pb+7);
+    uint32_t sw_start  = peekmem16(pb+4);
 
     exec_swr_ram(flags, ram_start, len, sw_start, romid);
 }
@@ -1299,16 +1299,16 @@ static uint16_t srp_fn(uint16_t addr, uint16_t *vptr)
     int ch;
 
     do
-        ch = readmem(addr++);
+        ch = peekmem(addr++);
     while (ch == ' ' || ch == '\t');
 
     if (ch != '\r') {
         *vptr = addr-1;
         do
-            ch = readmem(addr++);
+            ch = peekmem(addr++);
         while (ch != ' ' && ch != '\t' && ch != '\r');
         if (ch != '\r')
-            writemem(addr-1, '\r');
+            pokemem(addr-1, '\r');
         return addr;
     }
     return 0;
@@ -1321,7 +1321,7 @@ static uint16_t srp_hex(int ch, uint16_t addr, uint16_t *vptr)
 
     if ((nyb = hex2nyb(ch)) >= 0) {
         value = nyb;
-        while ((nyb = hex2nyb(readmem(addr++))) >= 0)
+        while ((nyb = hex2nyb(peekmem(addr++))) >= 0)
             value = value << 4 | nyb;
         *vptr = value;
         return --addr;
@@ -1335,7 +1335,7 @@ static uint16_t srp_start(uint16_t addr, uint16_t *start)
     int ch;
 
     do
-        ch = readmem(addr++);
+        ch = peekmem(addr++);
     while (ch == ' ' || ch == '\t');
     return srp_hex(ch, addr, start);
 }
@@ -1346,12 +1346,12 @@ static uint16_t srp_length(uint16_t addr, uint16_t start, uint16_t *len)
     uint16_t end;
 
     do
-        ch = readmem(addr++);
+        ch = peekmem(addr++);
     while (ch == ' ' || ch == '\t');
 
     if (ch == '+') {
         do
-            ch = readmem(addr++);
+            ch = peekmem(addr++);
         while (ch == ' ' || ch == '\t');
         return srp_hex(ch, addr, len);
     } else {
@@ -1368,7 +1368,7 @@ static uint16_t srp_romid(uint16_t addr, int16_t *romid)
     uint16_t naddr;
 
     do
-        ch = readmem(addr++);
+        ch = peekmem(addr++);
     while (ch == ' ' || ch == '\t');
 
     if ((naddr = srp_hex(ch, addr, (uint16_t*)romid)))
@@ -1399,20 +1399,20 @@ static bool srp_tail(uint16_t addr, uint8_t flag, uint16_t fnaddr, uint16_t star
     } else {
         uint16_t msw;
         SEC;
-        writemem(0x100, flag);
-        writemem16(0x101, fnaddr);
-        writemem(0x103, romid);
-        writemem16(0x104, start);
-        writemem16(0x106, len);
-        writemem16(0x108, 0);
+        pokemem(0x100, flag);
+        pokemem16(0x101, fnaddr);
+        pokemem(0x103, romid);
+        pokemem16(0x104, start);
+        pokemem16(0x106, len);
+        pokemem16(0x108, 0);
         do
-            ch = readmem(addr++);
+            ch = peekmem(addr++);
         while (ch == ' ' || ch == '\t');
         if (ch == 'Q' || ch == 'q')
             msw = 0xffff;
         else
             msw = 0;
-        writemem16(0x10a, msw);
+        pokemem16(0x10a, msw);
         log_debug("vdfs: srp_tail executing via OSWORD, flag=%d, fnaddr=%04X, romid=%d, start=%04X, len=%d, msw=%02X", flag, fnaddr, romid, start, len, msw);
         cpu_debug->setA(67);
         cpu_debug->setX(0);
@@ -1499,15 +1499,15 @@ static void write_file_attr(uint32_t maddr, vdfs_entry *ent)
         exec_addr = ent->u.file.exec_addr;
         length = ent->u.file.length;
     }
-    writemem32(maddr+0x02, load_addr);
-    writemem32(maddr+0x06, exec_addr);
-    writemem32(maddr+0x0a, length);
+    pokemem32(maddr+0x02, load_addr);
+    pokemem32(maddr+0x06, exec_addr);
+    pokemem32(maddr+0x0a, length);
 }
 
 static void osfile_attribs(uint32_t pb, vdfs_entry *ent)
 {
     write_file_attr(pb, ent);
-    writemem32(pb+0x0e, ent->attribs);
+    pokemem32(pb+0x0e, ent->attribs);
 }
 
 static uint32_t write_bytes(FILE *fp, uint32_t addr, size_t bytes)
@@ -1519,7 +1519,7 @@ static uint32_t write_bytes(FILE *fp, uint32_t addr, size_t bytes)
             char *ptr = buffer;
             size_t chunk = sizeof buffer;
             while (chunk--)
-                *ptr++ = readmem(addr++);
+                *ptr++ = peekmem(addr++);
             fwrite(buffer, sizeof buffer, 1, fp);
             bytes -= sizeof buffer;
         }
@@ -1527,7 +1527,7 @@ static uint32_t write_bytes(FILE *fp, uint32_t addr, size_t bytes)
             char *ptr = buffer;
             size_t chunk = bytes;
             while (chunk--)
-                *ptr++ = readmem(addr++);
+                *ptr++ = peekmem(addr++);
             fwrite(buffer, bytes, 1, fp);
         }
     }
@@ -1590,14 +1590,14 @@ static void osfile_write(uint32_t pb, const char *path, uint32_t (*callback)(FIL
 
         if ((fp = fopen(ent->host_path, "wb"))) {
             ent->attribs = (ent->attribs & ~ATTR_IS_DIR) | ATTR_EXISTS;
-            start_addr = readmem32(pb+0x0a);
-            end_addr = readmem32(pb+0x0e);
+            start_addr = peekmem32(pb+0x0a);
+            end_addr = peekmem32(pb+0x0e);
             callback(fp, start_addr, end_addr - start_addr);
             fclose(fp);
-            scan_attr(ent, readmem32(pb+0x02), readmem32(pb+0x06));
+            scan_attr(ent, peekmem32(pb+0x02), peekmem32(pb+0x06));
             write_back(ent);
-            writemem32(pb+0x0a, ent->u.file.length);
-            writemem32(pb+0x0e, ent->attribs);
+            pokemem32(pb+0x0a, ent->u.file.length);
+            pokemem32(pb+0x0e, ent->attribs);
             cpu_debug->setA(1);
         } else
             log_warn("vdfs: unable to create file '%s': %s\n", ent->host_fn, strerror(errno));
@@ -1613,11 +1613,11 @@ static void osfile_set_meta(uint32_t pb, const char *path, uint16_t which)
             cpu_debug->setA(2);
         else {
             if (which & META_LOAD)
-                ent->u.file.load_addr = readmem32(pb + 0x02);
+                ent->u.file.load_addr = peekmem32(pb + 0x02);
             if (which & META_EXEC)
-                ent->u.file.exec_addr = readmem32(pb + 0x06);
+                ent->u.file.exec_addr = peekmem32(pb + 0x06);
             if (which & META_ATTR) {
-                uint16_t attr = readmem(pb + 0x0e);
+                uint16_t attr = peekmem(pb + 0x0e);
                 log_debug("vdfs: setting attributes of %02X", attr);
 #ifndef WIN32
                 if (attr != (ent->attribs & ATTR_ACORN_MASK)) {
@@ -1761,7 +1761,7 @@ static void read_file_io(FILE *fp, uint32_t addr)
     while ((nbytes = fread(buffer, 1, sizeof buffer, fp)) > 0) {
         char *ptr = buffer;
         while (nbytes--)
-            writemem(addr++, *ptr++);
+            pokemem(addr++, *ptr++);
     }
 }
 
@@ -1787,8 +1787,8 @@ static void osfile_load(uint32_t pb, const char *path)
         if (ent->attribs & ATTR_IS_DIR)
             adfs_error(err_wont);
         else if ((fp = fopen(ent->host_path, "rb"))) {
-            if (readmem(pb+0x06) == 0)
-                addr = readmem32(pb+0x02);
+            if (peekmem(pb+0x06) == 0)
+                addr = peekmem32(pb+0x02);
             else
                 addr = ent->u.file.load_addr;
             if (addr > 0xffff0000 || curtube == -1)
@@ -1814,7 +1814,7 @@ static void osfile(void)
     if (cpu_debug->getA() <= 0x08 || cpu_debug->getA() == 0xff) {
         log_debug("vdfs: osfile(A=%02X, X=%02X, Y=%02X)", cpu_debug->getA(), cpu_debug->getX(), cpu_debug->getY());
         if (check_valid_dir(cur_dir, "current")) {
-            parse_name(path, sizeof path, readmem16(pb));
+            parse_name(path, sizeof path, peekmem16(pb));
             switch (cpu_debug->getA()) {
                 case 0x00:  // save file.
                     osfile_write(pb, path, write_bytes);
@@ -2030,15 +2030,15 @@ static void osgbpb_write(uint32_t pb)
     uint32_t mem_ptr;
     size_t bytes;
 
-    if ((fp = getfp_write(readmem(pb)))) {
+    if ((fp = getfp_write(peekmem(pb)))) {
         if (cpu_debug->getA() == 0x01)
-            fseek(fp, readmem32(pb+9), SEEK_SET);
-        mem_ptr = readmem32(pb+1);
-        bytes = readmem32(pb+5);
+            fseek(fp, peekmem32(pb+9), SEEK_SET);
+        mem_ptr = peekmem32(pb+1);
+        bytes = peekmem32(pb+5);
         mem_ptr = write_bytes(fp, mem_ptr, bytes);
-        writemem32(pb+1, mem_ptr);
-        writemem32(pb+5, 0);
-        writemem32(pb+9, ftell(fp));
+        pokemem32(pb+1, mem_ptr);
+        pokemem32(pb+5, 0);
+        pokemem32(pb+9, ftell(fp));
     }
 }
 
@@ -2054,7 +2054,7 @@ static size_t read_bytes(FILE *fp, uint32_t addr, size_t bytes)
         bytes -= nbytes;
         if (addr > 0xffff0000 || curtube == -1) {
             while (nbytes--)
-                writemem(addr++, *ptr++);
+                pokemem(addr++, *ptr++);
         }
         else {
             while (nbytes--)
@@ -2068,7 +2068,7 @@ static size_t read_bytes(FILE *fp, uint32_t addr, size_t bytes)
         bytes -= nbytes;
         if (addr > 0xffff0000 || curtube == -1) {
             while (nbytes--)
-                writemem(addr++, *ptr++);
+                pokemem(addr++, *ptr++);
         }
         else {
             while (nbytes--)
@@ -2085,15 +2085,15 @@ static int osgbpb_read(uint32_t pb)
     size_t bytes;
     size_t undone = 0;
 
-    if ((fp = getfp_read(readmem(pb)))) {
+    if ((fp = getfp_read(peekmem(pb)))) {
         if (cpu_debug->getA() == 0x03)
-            fseek(fp, readmem32(pb+9), SEEK_SET);
-        mem_ptr = readmem32(pb+1);
-        bytes = readmem32(pb+5);
+            fseek(fp, peekmem32(pb+9), SEEK_SET);
+        mem_ptr = peekmem32(pb+1);
+        bytes = peekmem32(pb+5);
         undone = read_bytes(fp, mem_ptr, bytes);
-        writemem32(pb+1, mem_ptr + bytes - undone);
-        writemem32(pb+5, undone);
-        writemem32(pb+9, ftell(fp));
+        pokemem32(pb+1, mem_ptr + bytes - undone);
+        pokemem32(pb+5, undone);
+        pokemem32(pb+9, ftell(fp));
     }
     return undone;
 }
@@ -2106,11 +2106,11 @@ static void osgbpb_get_title(uint32_t pb)
 
     if (check_valid_dir(cur_dir, "current")) {
         mem_ptr = pb;
-        writemem(mem_ptr++, strlen(cur_dir->acorn_fn));
+        pokemem(mem_ptr++, strlen(cur_dir->acorn_fn));
         for (ptr = cur_dir->acorn_fn; (ch = *ptr++); )
-            writemem(mem_ptr++, ch);
-        writemem(mem_ptr++, 0); // no start-up option.
-        writemem(mem_ptr, 0);   // drive is always 0.
+            pokemem(mem_ptr++, ch);
+        pokemem(mem_ptr++, 0); // no start-up option.
+        pokemem(mem_ptr, 0);   // drive is always 0.
     }
 }
 
@@ -2121,12 +2121,12 @@ static void osgbpb_get_dir(uint32_t pb, vdfs_entry *dir, const char *which)
     int ch;
 
     if (check_valid_dir(dir, which)) {
-        mem_ptr = readmem32(pb+1);
-        writemem(mem_ptr++, 1);   // length of drive number.
-        writemem(mem_ptr++, '0'); // drive number.
-        writemem(mem_ptr++, strlen(dir->acorn_fn));
+        mem_ptr = peekmem32(pb+1);
+        pokemem(mem_ptr++, 1);   // length of drive number.
+        pokemem(mem_ptr++, '0'); // drive number.
+        pokemem(mem_ptr++, strlen(dir->acorn_fn));
         for (ptr = dir->acorn_fn; (ch = *ptr++); )
-            writemem(mem_ptr++, ch);
+            pokemem(mem_ptr++, ch);
     }
 }
 
@@ -2217,7 +2217,7 @@ static int osgbpb_list(uint32_t pb)
     char *ptr;
 
     if (check_valid_dir(cur_dir, "current")) {
-        seq_ptr = readmem32(pb+9);
+        seq_ptr = peekmem32(pb+9);
         if (seq_ptr == 0)
             acorn_sort(cur_dir);
         n = seq_ptr;
@@ -2227,13 +2227,13 @@ static int osgbpb_list(uint32_t pb)
                     break;
         if (cat_ptr) {
             status = 0;
-            mem_ptr = readmem32(pb+1);
-            n = readmem32(pb+5);
+            mem_ptr = peekmem32(pb+1);
+            n = peekmem32(pb+5);
             log_debug("vdfs: seq_ptr=%d, writing max %d entries starting %04X, first=%s\n", seq_ptr, n, mem_ptr, cat_ptr->acorn_fn);
             for (;;) {
-                writemem(mem_ptr++, strlen(cat_ptr->acorn_fn));
+                pokemem(mem_ptr++, strlen(cat_ptr->acorn_fn));
                 for (ptr = cat_ptr->acorn_fn; (ch = *ptr++); )
-                    writemem(mem_ptr++, ch);
+                    pokemem(mem_ptr++, ch);
                 seq_ptr++;
                 if (--n == 0)
                     break;
@@ -2247,8 +2247,8 @@ static int osgbpb_list(uint32_t pb)
                 log_debug("vdfs: next=%s", cat_ptr->acorn_fn);
             }
             log_debug("vdfs: finish at %04X\n", mem_ptr);
-            writemem32(pb+5, n);
-            writemem32(pb+9, seq_ptr);
+            pokemem32(pb+5, n);
+            pokemem32(pb+9, seq_ptr);
             return status;
         }
     }
@@ -2317,7 +2317,7 @@ static void osargs(void)
                 cpu_debug->setA(fs_num); // say this filing selected.
                 break;
             case 1:
-                writemem32(cpu_debug->getX(), cmd_tail);
+                pokemem32(cpu_debug->getX(), cmd_tail);
                 break;
             case 0xff:
                 flush_all();
@@ -2329,15 +2329,15 @@ static void osargs(void)
         switch (cpu_debug->getA())
         {
             case 0:     // read sequential pointer
-                writemem32(cpu_debug->getX(), ftell(fp));
+                pokemem32(cpu_debug->getX(), ftell(fp));
                 break;
             case 1:     // write sequential pointer
-                fseek(fp, readmem32(cpu_debug->getX()), SEEK_SET);
+                fseek(fp, peekmem32(cpu_debug->getX()), SEEK_SET);
                 break;
             case 2:     // read file size (extent)
                 temp = ftell(fp);
                 fseek(fp, 0, SEEK_END);
-                writemem32(cpu_debug->getX(), ftell(fp));
+                pokemem32(cpu_debug->getX(), ftell(fp));
                 fseek(fp, temp, SEEK_SET);
                 break;
             case 0xff:  // write any cache to media.
@@ -2445,7 +2445,7 @@ static void run_file(const char *err)
                     cpu_debug->forceJMP(ent->u.file.exec_addr);
                 } else {
                     log_debug("vdfs: run_file: writing to tube proc memory at %08X", addr);
-                    writemem32(0xc0, ent->u.file.exec_addr); // set up for tube execution.
+                    pokemem32(0xc0, ent->u.file.exec_addr); // set up for tube execution.
                     read_file_tube(fp, addr);
                     rom_dispatch(VDFS_ROM_TUBE_EXEC);
                 }
@@ -2555,13 +2555,13 @@ static uint16_t parse_cmd(uint16_t addr, char *dest)
     do {
         if (i == MAX_CMD_LEN)
             return 0;
-        ch = readmem(addr++);
+        ch = peekmem(addr++);
         dest[i++] = ch;
     } while (ch != ' ' && ch != '\r' && ch != '.');
 
     log_debug("vdfs: parse_cmd: cmd=%.*s, finish with %02X at %04X", i, dest, ch, addr);
     if (ch != '\r')
-        while ((ch = readmem(addr++)) == ' ')
+        while ((ch = peekmem(addr++)) == ' ')
             ;
     return --addr;
 }
@@ -2590,10 +2590,10 @@ static const struct cmdent *lookup_cmd(const struct cmdent *tab, size_t nentry, 
 
 static void fsclaim(uint16_t addr)
 {
-    int ch = readmem(addr);
+    int ch = peekmem(addr);
     log_debug("vdfs: fsclaim, ch = %02X, addr=%04X", ch, addr);
     if (ch == 'o' || ch == 'O') {
-        ch = readmem(++addr);
+        ch = peekmem(++addr);
         if (ch == 'n' || ch == 'N') {
             fs_flags |= CLAIM_ADFS|CLAIM_DFS;
             return;
@@ -2604,7 +2604,7 @@ static void fsclaim(uint16_t addr)
         }
     }
     else if (ch == '+') {
-        ch = readmem(++addr);
+        ch = peekmem(++addr);
         if (ch == 'a' || ch == 'A') {
             fs_flags |= CLAIM_ADFS;
             return;
@@ -2615,7 +2615,7 @@ static void fsclaim(uint16_t addr)
         }
     }
     else if (ch == '-') {
-        ch = readmem(++addr);
+        ch = peekmem(++addr);
         if (ch == 'a' || ch == 'A') {
             fs_flags &= ~CLAIM_ADFS;
             return;
@@ -2672,16 +2672,16 @@ static uint16_t gcopy_fn(vdfs_entry *ent, uint16_t mem_ptr)
     int ch;
 
     while (mem_ptr < mem_end && (ch = *ptr++))
-        writemem(mem_ptr++, ch);
+        pokemem(mem_ptr++, ch);
     while (mem_ptr < mem_end)
-        writemem(mem_ptr++, ' ');
+        pokemem(mem_ptr++, ' ');
     return mem_ptr;
 }
 
 static void gcopy_attr(vdfs_entry *ent)
 {
     uint16_t mem_ptr = gcopy_fn(ent, 0x100);
-    writemem16(mem_ptr, ent->attribs);
+    pokemem16(mem_ptr, ent->attribs);
     write_file_attr(mem_ptr, ent);
 }
 
@@ -2718,16 +2718,16 @@ static int chan_seq = 0;
 
 static void gcopy_open(vdfs_entry *ent)
 {
-    writemem(0x100, MIN_CHANNEL + chan_seq);
+    pokemem(0x100, MIN_CHANNEL + chan_seq);
     uint16_t mem_ptr = gcopy_fn(ent, 0x101);
-    writemem(mem_ptr++, ent->attribs >> 8);
+    pokemem(mem_ptr++, ent->attribs >> 8);
     FILE *fp = vdfs_chan[chan_seq].fp;
     if (fp) {
         long pos = ftell(fp);
-        writemem32(mem_ptr, pos);
+        pokemem32(mem_ptr, pos);
         fseek(fp, 0, SEEK_END);
         long ext = ftell(fp);
-        writemem32(mem_ptr+4, ext);
+        pokemem32(mem_ptr+4, ext);
         ent->u.file.length = ext;
         fseek(fp, pos, SEEK_SET);
     }
@@ -2829,7 +2829,7 @@ static void cmd_osw7f(uint16_t addr)
     const struct cmdent *ent;
     char  cmd[MAX_CMD_LEN];
 
-    if (readmem(addr) == '\r') {
+    if (peekmem(addr) == '\r') {
         cpu_debug->setX(osw7fmc_act - VDFS_ACT_OSW7F_NONE);
         rom_dispatch(VDFS_ROM_OSW7F);
     }
@@ -2858,11 +2858,11 @@ static int mmb_parse_find(uint16_t addr, int ch)
     int i;
 
     if (ch == '"')
-        ch = readmem(addr++);
+        ch = peekmem(addr++);
     i = 0;
     while (ch != '"' && ch != '\r' && i < sizeof(name)) {
         name[i++] = ch;
-        ch = readmem(addr++);
+        ch = peekmem(addr++);
     }
     name[i] = 0;
     if ((i = mmb_find(name)) < 0)
@@ -2874,18 +2874,18 @@ static void cmd_mmb_din(uint16_t addr)
 {
     int num1, num2, ch;
 
-    ch = readmem(addr++);
+    ch = peekmem(addr++);
     if (ch >= '0' && ch <= '9') {
         num1 = ch - '0';
-        while ((ch = readmem(addr++)) >= '0' && ch <= '9')
+        while ((ch = peekmem(addr++)) >= '0' && ch <= '9')
             num1 = num1 * 10 + ch - '0';
         while (ch == ' ')
-            ch = readmem(addr++);
+            ch = peekmem(addr++);
         if (ch == '\r')
             mmb_pick(0, num1);
         else if (ch >= '0' && ch <= '9') {
             num2 = ch - '0';
-            while ((ch = readmem(addr++)) >= '0' && ch <= '9')
+            while ((ch = peekmem(addr++)) >= '0' && ch <= '9')
                 num2 = num2 * 10 + ch - '0';
             if (num1 >= 0 && num1 <= 3)
                 mmb_pick(num1, num2);
@@ -2949,7 +2949,7 @@ static bool vdfs_do(enum vdfs_action act, uint16_t addr)
         files_prep();
         break;
     case VDFS_ACT_INFO:
-        if (readmem(addr) == '\r')
+        if (peekmem(addr) == '\r')
             adfs_error(err_badcmd);
         else
             file_info(addr);
@@ -3067,12 +3067,12 @@ static void osfsc(void)
 
 static void osword_discio(void)
 {
-    uint16_t pb   = readmem(0xf0) | (readmem(0xf1) << 8);
-    uint8_t drive = readmem(pb);
-    uint8_t cmd   = readmem(pb+6);
-    uint8_t track = readmem(pb+7);
-    uint8_t sect  = readmem(pb+8);
-    uint8_t byte9 = readmem(pb+9);
+    uint16_t pb   = peekmem(0xf0) | (peekmem(0xf1) << 8);
+    uint8_t drive = peekmem(pb);
+    uint8_t cmd   = peekmem(pb+6);
+    uint8_t track = peekmem(pb+7);
+    uint8_t sect  = peekmem(pb+8);
+    uint8_t byte9 = peekmem(pb+9);
     uint8_t sects = byte9 & 0x0f;
     uint16_t ssize;
 
@@ -3087,7 +3087,7 @@ static void osword_discio(void)
 
     FILE *fp = sdf_owseek(drive & 1, sect, track, drive >> 1, ssize);
     if (fp) {
-        uint32_t addr = readmem32(pb+1);
+        uint32_t addr = peekmem32(pb+1);
         size_t bytes = (sects & 0x0f) << 8;
         if (cmd == 0x53)
             read_bytes(fp, addr, bytes);
@@ -3095,23 +3095,23 @@ static void osword_discio(void)
             write_bytes(fp, addr, bytes);
             SEZ;
         }
-        writemem(pb+10, 0);
+        pokemem(pb+10, 0);
     }
     else {
         log_debug("vdfs: osword attempting to read invalid/empty drive %d", drive);
-        writemem(pb+10, 0x14); // track 0 not found.
+        pokemem(pb+10, 0x14); // track 0 not found.
     }
     if (osw7fmc_tab) {
         const uint8_t *ptr;
         uint8_t tb, mb, nc, cf = 0;
         for (ptr = osw7fmc_tab; (tb = *ptr++); ) {
-            mb = tb ^ readmem(0x1000+tb);
+            mb = tb ^ peekmem(0x1000+tb);
             // Simulate cpu_debug->getA() ROL A
             nc = mb & 0x80;
             mb = mb << 1 | cf;
             cf = nc ? 1 : 0;
             mb ^= 0x23;
-            writemem(0x1000+tb, mb);
+            pokemem(0x1000+tb, mb);
         }
     }
 }
@@ -3119,7 +3119,7 @@ static void osword_discio(void)
 static void osword(void)
 {
     if (fs_num) {
-        switch(readmem(0xef))
+        switch(peekmem(0xef))
         {
             case 0x42:
                 osword_swr_ram();
@@ -3174,7 +3174,7 @@ static void serv_cmd(void)
     const struct cmdent *ent;
     char  cmd[MAX_CMD_LEN];
 
-    if ((addr = parse_cmd(readmem16(0xf2) + cpu_debug->getY(), cmd))) {
+    if ((addr = parse_cmd(peekmem16(0xf2) + cpu_debug->getY(), cmd))) {
         ent = lookup_cmd(ctab_always, ARRAY_SIZE(ctab_always), cmd);
         if (!ent && vdfs_enabled)
             ent = lookup_cmd(ctab_enabled, ARRAY_SIZE(ctab_enabled), cmd);
@@ -3194,9 +3194,9 @@ static void serv_help(void)
 {
     const struct cmdent *ent;
     char  cmd[MAX_CMD_LEN];
-    uint16_t addr = readmem16(0xf2) + cpu_debug->getY();
+    uint16_t addr = peekmem16(0xf2) + cpu_debug->getY();
 
-    int ch = readmem(addr);
+    int ch = peekmem(addr);
     if (ch == '\r')
         rom_dispatch(VDFS_ROM_HELP_SHORT);
     else if (ch == '.')

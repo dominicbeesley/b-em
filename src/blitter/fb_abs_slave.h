@@ -17,6 +17,10 @@ public:
 	virtual void fb_set_A(uint32_t addr, bool we) = 0;
 	virtual void fb_set_D_wr(uint8_t dat) = 0;
 
+    //peek / poke for reading / writing direct to hardware for emulation purposes bypassing all timing i.e. for VDFS sneakiness
+    virtual uint8_t peek(uint32_t addr) = 0;
+    virtual void poke(uint32_t addr, uint8_t dat) = 0;
+
 };
 
 

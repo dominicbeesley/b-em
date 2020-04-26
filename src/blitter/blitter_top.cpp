@@ -291,3 +291,13 @@ void blitter_top::sound_fillbuf(int16_t *buffer, int len) {
 	paula.sound_fillbuf(buffer, len);
 }
 
+
+uint8_t blitter_top::peek(uint16_t addr) {
+    uint32_t addrp = log2phys(0x00FF0000 | addr);
+    return intcon.getSla(MAS_NO_CPU)->peek(addrp);
+}
+
+void blitter_top::poke(uint16_t addr, uint8_t dat) {
+    uint32_t addrp = log2phys(0x00FF0000 | addr);
+    return intcon.getSla(MAS_NO_CPU)->poke(addrp, dat);
+}

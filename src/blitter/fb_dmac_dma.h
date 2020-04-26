@@ -38,6 +38,10 @@ public:
 	// Inherited via fb_abs_resettable
 	virtual void reset() override;
 
+    virtual uint8_t peek(uint32_t addr) override;
+    virtual void poke(uint32_t addr, uint8_t dat) override;
+
+
 private:
 	fb_dmac_dma& dma;
 	fb_abs_master* mas; // connected master

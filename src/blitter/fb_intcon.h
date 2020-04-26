@@ -35,6 +35,11 @@ public:
 
 	friend class fb_intcon_mas;
 	friend class fb_intcon;
+
+
+    virtual uint8_t peek(uint32_t addr) override;
+    virtual void poke(uint32_t addr, uint8_t dat);
+
 	
 protected:
 

@@ -25,6 +25,10 @@ public:
 	virtual void fb_set_A(uint32_t addr, bool we) override;
 	virtual void fb_set_D_wr(uint8_t dat) override;
 
+    virtual uint8_t peek(uint32_t addr) override;
+    virtual void poke(uint32_t addr, uint8_t dat);
+
+
 private: 
 	blitter_top& top;
 	bool we;

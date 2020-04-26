@@ -20,8 +20,17 @@ void fbsla_mem_chipram::fb_set_cyc(fb_cyc_action cyc)
 			mas->fb_set_ACK(ack);
 			state = idle;
 		}
-	}
+    }
 }
+
+uint8_t fbsla_mem_chipram::peek(uint32_t addr) {
+    return mem[addr & 0x1FFFFF];
+}
+
+void fbsla_mem_chipram::poke(uint32_t addr, uint8_t dat) {
+    mem[addr & 0x1FFFFF] = dat;
+}
+
 
 void fbsla_mem_chipram::fb_set_A(uint32_t addr, bool we)
 {

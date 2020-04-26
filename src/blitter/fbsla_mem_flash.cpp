@@ -44,6 +44,17 @@ void fbsla_mem_flash::fb_set_cyc(fb_cyc_action cyc)
 	}
 }
 
+//peek just read ram don't fash wi programming etc
+uint8_t fbsla_mem_flash::peek(uint32_t addr) {
+    return mem[addr & 0x7FFFF];
+}
+
+//disallow poking?
+void fbsla_mem_flash ::poke(uint32_t addr, uint8_t dat) {
+    //mem[addr & 0x7FFFF] = dat;
+}
+
+
 void fbsla_mem_flash::fb_set_A(uint32_t addr, bool we)
 {
 	this->addr = addr;
