@@ -813,7 +813,7 @@ void sys_reset() {
 
         if (cpu_now == cpu_contains::cpu_blitter)
         {
-            blitter = new blitter_top(do_readmem, do_writemem);
+            blitter = new blitter_top(do_readmem, do_writemem, &sys_hogrec_fp);
             cpu = blitter;
             cpu_debug = blitter->get_cpu();
         }
@@ -832,12 +832,12 @@ void sys_reset() {
     cpu_prev = cpu_now;
     cpu->reset();
 
-    if (hogrec_fp) {
+    if (sys_hogrec_fp) {
         // make a dummy set of reset cycles
 
         uint8_t d[2] = { 0xFF, 0x07 };
         for (int i = 0; i < 100; i++) {
-            fwrite((const char *)&d[0],1 , 2, hogrec_fp);
+            fwrite((const char *)&d[0],1 , 2, sys_hogrec_fp);
         }
     }
 
@@ -899,25 +899,27 @@ void sys_exec() {
 
             cpu->execute_set_input(M6502_IRQ_LINE, interrupt ? ASSERT_LINE : CLEAR_LINE);
 
-            if (hogrec_fp) {
-                uint8_t d[2];
-                d[0] = cpu->getDATA();
-                d[1] = 
-                    (cpu->getRNW() ? 0x01 : 00)
-                    + (cpu->get_sync() ? 0x02 : 00)
-                    + 0x04 //rdy
-                    + 0x40 //rst
-                    ;
-                fwrite((const char *)&d[0], 1, 2, hogrec_fp);
-            }
 
             if (blitter)
-            {
-                
+            {               
                 blitter->tick(precycle - cycles - 1);
             }
-            else
+            else {
+
+                if (sys_hogrec_fp) {
+                    uint8_t d[2];
+                    d[0] = cpu->getDATA();
+                    d[1] =
+                        (cpu->getRNW() ? 0x01 : 00)
+                        + (cpu->get_sync() ? 0x02 : 00)
+                        + 0x04 //rdy
+                        + 0x40 //rst
+                        ;
+                    fwrite((const char *)&d[0], 1, 2, sys_hogrec_fp);
+                }
+
                 cpu->tick();
+            }
 
             precycle = cycles;
 
@@ -1005,10 +1007,19 @@ void m6502_loadstate(FILE * f)
     */
 }
 
-FILE *hogrec_fp;
+FILE *sys_hogrec_fp = NULL;
+const char *sys_hogrec_filename = NULL;
 
-void hogrec_start(const char *filename) {
-    hogrec_fp = fopen(filename, "wb");
+void sys_hogrec_stop() {
+    if (sys_hogrec_fp)
+        fclose(sys_hogrec_fp);
+    sys_hogrec_fp = NULL;
+}
+
+void sys_hogrec_start(const char *filename) {
+    sys_hogrec_stop();
+    sys_hogrec_filename = filename;
+    sys_hogrec_fp = fopen(filename, "wb");
 }
 
 void sys_sound_fillbuf(int16_t *buffer, int len) {

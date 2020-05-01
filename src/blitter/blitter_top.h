@@ -62,7 +62,7 @@ typedef void (*writemem_t)(uint32_t addr, uint32_t dat);
 class blitter_top : public m65x_device {
 public:
 
-	blitter_top(readmem_t rdmem, writemem_t wrmem) :
+	blitter_top(readmem_t rdmem, writemem_t wrmem, FILE **_hoglet_fp) :
 		m65x_device(),
 		sys(*this),
 		cpu(*this),
@@ -73,7 +73,8 @@ public:
 		dma(*this),
 		blitter(*this),
         sys_readmem(rdmem),
-        sys_writemem(wrmem)
+        sys_writemem(wrmem),
+        hogrec_fp(_hoglet_fp)
 	{
 		powerReset();
 		reset();
@@ -93,6 +94,7 @@ public:
 	void set_interrupts(compno_t comp_no, bool halt, bool irq, bool nmi);
 	
 	friend class fb_sys;
+    friend class fb_cpu;
 
 	void set_ROMPG(uint8_t d) {
 		reg_ROMPG = d;
@@ -141,6 +143,8 @@ public:
     void poke(uint16_t addr, uint8_t dat);
 
 protected:
+
+    FILE **hogrec_fp;
 
     readmem_t sys_readmem;
     writemem_t sys_writemem;
