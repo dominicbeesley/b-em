@@ -56,8 +56,8 @@ typedef enum {
 	compno_BLIT
 } compno_t;
 
-typedef uint8_t (*readmem_t)(uint16_t addr);
-typedef void (*writemem_t)(uint16_t addr, uint8_t dat);
+typedef uint32_t (*readmem_t)(uint32_t addr);
+typedef void (*writemem_t)(uint32_t addr, uint32_t dat);
 
 class blitter_top : public m65x_device {
 public:

@@ -175,13 +175,16 @@ cpu_debug_t core6502_cpu_debug = {
 };
 */
 
+uint32_t dbg_peekmem(uint32_t);
+void dbg_pokemem(uint32_t, uint32_t);
+
 cpu_debug_t core6502_cpu_debug = {
     "core6502",
     dbg_debug_enable,
     do_readmem,
     do_writemem,
-    NULL,
-    NULL,
+    dbg_peekmem,
+    dbg_pokemem,
     dbg_disassemble,
     dbg6502_reg_names,
     dbg_reg_get,
@@ -810,7 +813,7 @@ void sys_reset() {
 
         if (cpu_now == cpu_contains::cpu_blitter)
         {
-            blitter = new blitter_top(readmem, writemem);
+            blitter = new blitter_top(do_readmem, do_writemem);
             cpu = blitter;
             cpu_debug = blitter->get_cpu();
         }
@@ -920,17 +923,30 @@ void sys_exec() {
 
             uint16_t a = cpu->getADDR();
 
-            if (cpu->get_sync())
-            {
-                vis20k = RAMbank[a >> 12];
-                cpu_cur_op_pc = a;
-                sync = true;
+            if (blitter) {
+                if (cpu->getRNW())
+                    cpu->setDATA(do_readmem(a));
+                else
+                    do_writemem(a, cpu->getDATA());
             }
-            if (cpu->getRNW())
-                cpu->setDATA(do_readmem(a));
-            else
-                do_writemem(a, cpu->getDATA());
-        } 
+            else {
+                if (cpu->get_sync())
+                {
+                    vis20k = RAMbank[a >> 12];
+                    cpu_cur_op_pc = a;
+                    sync = true;
+                    if (dbg_core6502)
+                        debug_preexec(&core6502_cpu_debug, a);
+                }
+                if (cpu->getRNW())
+                    cpu->setDATA(readmem(a));
+                else
+                    writemem(a, cpu->getDATA());
+                if (sync && dbg_core6502 && cpu->getDATA() == 0)
+                    debug_trap(&core6502_cpu_debug, a, 0);
+            }
+
+        }
 
         polltime(1);
 
@@ -1014,12 +1030,20 @@ uint8_t peekmem(uint16_t addr) {
     if (blitter) 
         return blitter->peek(addr);
     else
-        return readmem(addr);    
+        return do_readmem(addr);    
 }
 
 void pokemem(uint16_t addr, uint8_t dat) {
     if (blitter)
         return blitter->poke(addr, dat);
     else
-        return writemem(addr, dat);
+        return do_writemem(addr, dat);
+}
+
+uint32_t dbg_peekmem(uint32_t addr) {
+    return peekmem((uint16_t)addr);
+}
+
+void dbg_pokemem(uint32_t addr, uint32_t dat) {
+    pokemem((uint16_t)addr, (uint8_t)dat);
 }
