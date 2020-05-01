@@ -1025,8 +1025,9 @@ const char *vdfs_get_root(void)
 void vdfs_init(const char *root)
 {
     scan_seq = 0;
-    if (root == NULL)
-        root = getenv("BEM_VDFS_ROOT");
+    const char *env = getenv("BEM_VDFS_ROOT");
+    if (env)
+        root = env;
     if (root == NULL)
         root = ".";
     vdfs_new_root(root, &root_dir);
