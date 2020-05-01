@@ -56,11 +56,11 @@ void fb_sys::fb_set_D_wr(uint8_t dat)
 }
 
 uint8_t fb_sys::peek(uint32_t addr) {
-    return (top.sys_readmem)(addr);
+    return (top.sys_readmem)(addr & 0x0000FFFF); // need to restrict to 64k or read/writemem will ignore
 }
 
 void fb_sys::poke(uint32_t addr, uint8_t dat) {
-    (*top.sys_writemem)(addr, dat);
+    (*top.sys_writemem)(addr & 0x0000FFFF, dat); // need to restrict to 64k or read/writemem will ignore
 }
 
 void fb_sys::tick(bool sys)
