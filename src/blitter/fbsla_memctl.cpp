@@ -48,6 +48,10 @@ uint8_t fbsla_memctl::peek(uint32_t addr) {
     case 7:
         return top.get_blturbo();
         break;
+    case 0xE:
+        return 0x00;
+    case 0xF:
+        return 0x00;
     default:
         return 0xFF;
         break;
