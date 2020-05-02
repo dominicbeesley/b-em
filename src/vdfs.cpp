@@ -22,6 +22,8 @@ extern "C" {
 #include "vdfs.h"
 }
 
+const char *vdfs_cfg_root;
+
 extern m6502_device *cpu_debug;
 
 #define SEC cpu_debug->setP(cpu_debug->getP() | 0x01)
@@ -1020,12 +1022,13 @@ const char *vdfs_get_root(void)
 
 // Initialise the VDFS module.
 
-void vdfs_init(void)
+void vdfs_init(const char *root)
 {
-    char *root;
-
     scan_seq = 0;
-    if ((root = getenv("BEM_VDFS_ROOT")) == NULL)
+    const char *env = getenv("BEM_VDFS_ROOT");
+    if (env)
+        root = env;
+    if (root == NULL)
         root = ".";
     vdfs_new_root(root, &root_dir);
     root_dir.parent = cur_dir = lib_dir = cat_dir = prev_dir = &root_dir;

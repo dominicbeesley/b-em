@@ -175,13 +175,16 @@ cpu_debug_t core6502_cpu_debug = {
 };
 */
 
+uint32_t dbg_peekmem(uint32_t);
+void dbg_pokemem(uint32_t, uint32_t);
+
 cpu_debug_t core6502_cpu_debug = {
     "core6502",
     dbg_debug_enable,
     do_readmem,
     do_writemem,
-    NULL,
-    NULL,
+    dbg_peekmem,
+    dbg_pokemem,
     dbg_disassemble,
     dbg6502_reg_names,
     dbg_reg_get,
@@ -810,7 +813,7 @@ void sys_reset() {
 
         if (cpu_now == cpu_contains::cpu_blitter)
         {
-            blitter = new blitter_top(readmem, writemem);
+            blitter = new blitter_top(do_readmem, do_writemem, &sys_hogrec_fp);
             cpu = blitter;
             cpu_debug = blitter->get_cpu();
         }
@@ -829,12 +832,12 @@ void sys_reset() {
     cpu_prev = cpu_now;
     cpu->reset();
 
-    if (hogrec_fp) {
+    if (sys_hogrec_fp) {
         // make a dummy set of reset cycles
 
         uint8_t d[2] = { 0xFF, 0x07 };
         for (int i = 0; i < 100; i++) {
-            fwrite((const char *)&d[0],1 , 2, hogrec_fp);
+            fwrite((const char *)&d[0],1 , 2, sys_hogrec_fp);
         }
     }
 
@@ -896,41 +899,56 @@ void sys_exec() {
 
             cpu->execute_set_input(M6502_IRQ_LINE, interrupt ? ASSERT_LINE : CLEAR_LINE);
 
-            if (hogrec_fp) {
-                uint8_t d[2];
-                d[0] = cpu->getDATA();
-                d[1] = 
-                    (cpu->getRNW() ? 0x01 : 00)
-                    + (cpu->get_sync() ? 0x02 : 00)
-                    + 0x04 //rdy
-                    + 0x40 //rst
-                    ;
-                fwrite((const char *)&d[0], 1, 2, hogrec_fp);
-            }
 
             if (blitter)
-            {
-                
+            {               
                 blitter->tick(precycle - cycles - 1);
             }
-            else
+            else {
+
+                if (sys_hogrec_fp) {
+                    uint8_t d[2];
+                    d[0] = cpu->getDATA();
+                    d[1] =
+                        (cpu->getRNW() ? 0x01 : 00)
+                        + (cpu->get_sync() ? 0x02 : 00)
+                        + 0x04 //rdy
+                        + 0x40 //rst
+                        ;
+                    fwrite((const char *)&d[0], 1, 2, sys_hogrec_fp);
+                }
+
                 cpu->tick();
+            }
 
             precycle = cycles;
 
             uint16_t a = cpu->getADDR();
 
-            if (cpu->get_sync())
-            {
-                vis20k = RAMbank[a >> 12];
-                cpu_cur_op_pc = a;
-                sync = true;
+            if (blitter) {
+                if (cpu->getRNW())
+                    cpu->setDATA(do_readmem(a));
+                else
+                    do_writemem(a, cpu->getDATA());
             }
-            if (cpu->getRNW())
-                cpu->setDATA(do_readmem(a));
-            else
-                do_writemem(a, cpu->getDATA());
-        } 
+            else {
+                if (cpu->get_sync())
+                {
+                    vis20k = RAMbank[a >> 12];
+                    cpu_cur_op_pc = a;
+                    sync = true;
+                    if (dbg_core6502)
+                        debug_preexec(&core6502_cpu_debug, a);
+                }
+                if (cpu->getRNW())
+                    cpu->setDATA(readmem(a));
+                else
+                    writemem(a, cpu->getDATA());
+                if (sync && dbg_core6502 && cpu->getDATA() == 0)
+                    debug_trap(&core6502_cpu_debug, a, 0);
+            }
+
+        }
 
         polltime(1);
 
@@ -989,10 +1007,19 @@ void m6502_loadstate(FILE * f)
     */
 }
 
-FILE *hogrec_fp;
+FILE *sys_hogrec_fp = NULL;
+const char *sys_hogrec_filename = NULL;
 
-void hogrec_start(const char *filename) {
-    hogrec_fp = fopen(filename, "wb");
+void sys_hogrec_stop() {
+    if (sys_hogrec_fp)
+        fclose(sys_hogrec_fp);
+    sys_hogrec_fp = NULL;
+}
+
+void sys_hogrec_start(const char *filename) {
+    sys_hogrec_stop();
+    sys_hogrec_filename = filename;
+    sys_hogrec_fp = fopen(filename, "wb");
 }
 
 void sys_sound_fillbuf(int16_t *buffer, int len) {
@@ -1014,12 +1041,20 @@ uint8_t peekmem(uint16_t addr) {
     if (blitter) 
         return blitter->peek(addr);
     else
-        return readmem(addr);    
+        return do_readmem(addr);    
 }
 
 void pokemem(uint16_t addr, uint8_t dat) {
     if (blitter)
         return blitter->poke(addr, dat);
     else
-        return writemem(addr, dat);
+        return do_writemem(addr, dat);
+}
+
+uint32_t dbg_peekmem(uint32_t addr) {
+    return peekmem((uint16_t)addr);
+}
+
+void dbg_pokemem(uint32_t addr, uint32_t dat) {
+    pokemem((uint16_t)addr, (uint8_t)dat);
 }

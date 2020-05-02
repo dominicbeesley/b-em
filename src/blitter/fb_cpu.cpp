@@ -22,6 +22,17 @@ void fb_cpu::tick(bool sys)
 	} 
 
 	if (state == dotick || state == halt) {
+        if (*(top.hogrec_fp)) {
+                uint8_t d[2];
+                d[0] = cpu.getDATA();
+                d[1] =
+                    (cpu.getRNW() ? 0x01 : 00)
+                    + (cpu.get_sync() ? 0x02 : 00)
+                    + 0x04 //rdy
+                    + 0x40 //rst
+                    ;
+                fwrite((const char *)&d[0], 1, 2, *(top.hogrec_fp));
+        }
 		if (cpu.tick()) {
 			state = idle;
         }

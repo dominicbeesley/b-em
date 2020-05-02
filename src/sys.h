@@ -13,8 +13,10 @@ Dominic Beesley 2020 - separate out main system board functions from 6502.c
 void sys_reset(void);
 void sys_exec(void);
 
-extern FILE *hogrec_fp;
-void hogrec_start(const char *filename);
+extern FILE *sys_hogrec_fp;
+extern const char *sys_hogrec_filename;
+extern void sys_hogrec_start(const char *filename);
+extern void sys_hogrec_stop();
 
 extern int interrupt;
 extern int nmi;
