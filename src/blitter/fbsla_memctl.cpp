@@ -17,6 +17,7 @@ fbsla_memctl::~fbsla_memctl()
 void fbsla_memctl::reset()
 {
 	state = idle;
+    top.set_blturbo(0);
 }
 
 void fbsla_memctl::init(fb_abs_master & mas)
