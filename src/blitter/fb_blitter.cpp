@@ -114,10 +114,8 @@ void fb_blitter::tick(bool sys)
 	            }
 	            else {
 	                next_r_row_countdn = r_row_countdn - 1;
-	                //-- TODO: CHECK THIS thoroughly - seems to work!
-	                //--					if i_state_next = sMemAccA then
-	                r_cha_A_first = false;
-	                //--					end if;
+	                if (next_r_blit_state == state_type::sMemAccA)
+	                    r_cha_A_first = false;
 	            }
 	        }
 	        else if (prev_r_data_ready && r_blit_state == state_type::sMemAccA) {
