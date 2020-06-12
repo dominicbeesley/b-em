@@ -45,6 +45,9 @@ b-em.pdb
 src/hdfmt.exe
 scsi/*
 build/*
+*.exe
+*.sublime-project
+*.sublime-workspace
 b-em.ilk
 b-em.sublime-project
 b-em.sublime-workspace
