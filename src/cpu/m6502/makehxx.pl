@@ -19,10 +19,16 @@ my ($classname, $infn_olst, $infn_dlst, $outfn_hxx, $outfn_hxx2, $outfn_cxx) = @
 
 $classname || usage "missing classname";
 
+my $fop_cxx = 0;
+my $fop_hxx = 0;
+my $fop_hxx2 = 0;
 
 open(my $fh_out_cxx, ">", $outfn_cxx) || usage "cannot open output file $outfn_cxx : $!";
+$fop_cxx  = 1;
 open(my $fh_out_hxx, ">", $outfn_hxx) || usage "cannot open output file $outfn_hxx : $!";
+$fop_hxx  = 1;
 open(my $fh_out_hxx2, ">", $outfn_hxx2) || usage "cannot open output file $outfn_hxx2 : $!";
+$fop_hxx2  = 1;
 
 print $fh_out_cxx "// This file has been automatically produced by makehxx.pl\n";
 print $fh_out_cxx "// do not edit it.\n";
@@ -160,6 +166,7 @@ sub do_o_lst() {
 	while (<$fh_in_olst>) {
 
 		my $l = $_;
+		$l =~ s/[\r\n\s]+$//;
 
 		if ($l =~ $RE_COMMENT) {
 			$DEBUG >= 3 && print "//$1\n";
@@ -636,4 +643,11 @@ sub print_insts()
 	foreach my $i (@{$seq}) {
 		printf "%4s%s%s\n", $i->{type}, $in, $i->{text};
 	}
+}
+
+$SIG{__DIE__} = sub {
+    $fop_cxx && unlink $outfn_cxx;
+    $fop_hxx && unlink $outfn_hxx;
+    $fop_hxx2 && unlink $outfn_hxx2;
+    CORE::die @_;
 }

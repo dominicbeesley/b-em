@@ -58,16 +58,16 @@ lib_blitter_a_CFLAGS = -I$(srcdir) -I$(srcdir)/cpu/m6502 -I$(builddir)/cpu/m6502
 lib_blitter_a_CPPFLAGS = $(lib_m6502_a_CFLAGS)
 
 
-$(m6502_GEN): $(srcdir)/cpu/m6502/om6502.lst $(srcdir)/cpu/m6502/dm6502.lst
+$(m6502_GEN): $(srcdir)/cpu/m6502/om6502.lst $(srcdir)/cpu/m6502/dm6502.lst  $(srcdir)/cpu/m6502/makehxx.pl
 	$(PERL) $(srcdir)/cpu/m6502/makehxx.pl m6502 $(srcdir)/cpu/m6502/om6502.lst $(srcdir)/cpu/m6502/dm6502.lst $(m6502_GEN)
 
-$(m65c02_GEN): $(srcdir)/cpu/m6502/om65c02.lst $(srcdir)/cpu/m6502/dm65c02.lst
+$(m65c02_GEN): $(srcdir)/cpu/m6502/om65c02.lst $(srcdir)/cpu/m6502/dm65c02.lst  $(srcdir)/cpu/m6502/makehxx.pl
 	$(PERL) $(srcdir)/cpu/m6502/makehxx.pl m65c02 $(srcdir)/cpu/m6502/om65c02.lst $(srcdir)/cpu/m6502/dm65c02.lst $(m65c02_GEN)
 
-$(r65c02_GEN): $(srcdir)/cpu/m6502/dr65c02.lst
+$(r65c02_GEN): $(srcdir)/cpu/m6502/dr65c02.lst  $(srcdir)/cpu/m6502/makehxx.pl
 	$(PERL) $(srcdir)/cpu/m6502/makehxx.pl r65c02 - $(srcdir)/cpu/m6502/dm65c02.lst $(r65c02_GEN)
 
-$(m65ce02_GEN): $(srcdir)/cpu/m6502/om65ce02.lst $(srcdir)/cpu/m6502/dm65ce02.lst
+$(m65ce02_GEN): $(srcdir)/cpu/m6502/om65ce02.lst $(srcdir)/cpu/m6502/dm65ce02.lst $(srcdir)/cpu/m6502/makehxx.pl
 	$(PERL) $(srcdir)/cpu/m6502/makehxx.pl m65ce02 $(srcdir)/cpu/m6502/om65ce02.lst $(srcdir)/cpu/m6502/dm65ce02.lst $(m65ce02_GEN)
 
 

@@ -69,6 +69,7 @@ int autoboot=0;
 int joybutton[2];
 float joyaxes[4];
 int emuspeed = 4;
+bool alt_down = false;
 
 static ALLEGRO_TIMER *timer;
 static ALLEGRO_EVENT_QUEUE *queue;
@@ -307,13 +308,12 @@ void main_init(int argc, char *argv[])
         disc_load(0, discfns[0]);
     disc_load(1, discfns[1]);
     tape_load(tape_fn);
-    if (defaultwriteprot) {
+    if (defaultwriteprot)
         writeprot[0] = writeprot[1] = 1;
-        if (discfns[0])
-            gui_set_disc_wprot(0, true);
-        if (discfns[1])
-            gui_set_disc_wprot(1, true);
-    }
+    if (discfns[0])
+        gui_set_disc_wprot(0, writeprot[0]);
+    if (discfns[1])
+        gui_set_disc_wprot(1, writeprot[1]);
     debug_start();
 }
 
@@ -346,6 +346,8 @@ static void main_start_fullspeed(void)
     al_emit_user_event(&evsrc, &event, NULL);
 }
 
+
+
 static void main_key_down(ALLEGRO_EVENT *event)
 {
     ALLEGRO_KEYBOARD_STATE kstate;
@@ -369,13 +371,30 @@ static void main_key_down(ALLEGRO_EVENT *event)
                 al_stop_timer(timer);
                 bempause = true;
             }
-        case ALLEGRO_KEY_ENTER:
+//DB: this is just plain annoying if you alt-tab out of b-em then tab back enter (without alt) will toggle fullscreen and get in a mess
+//changed to F11! This appears to be a problem generally with Allegro as it maintains its own key state but doesn't receive events
+//when it is not focussed.
+/*        case ALLEGRO_KEY_ENTER:
             al_get_keyboard_state(&kstate);
             if (al_key_down(&kstate, ALLEGRO_KEY_ALT)) {
                 video_toggle_fullscreen();
                 return;
             }
             break;
+*/
+        case ALLEGRO_KEY_ENTER:
+            al_get_keyboard_state(&kstate);
+            if (alt_down) {
+                video_toggle_fullscreen();
+                return;
+            }
+            break;
+        case ALLEGRO_KEY_ALT:
+            alt_down = true;
+            break;
+        case ALLEGRO_KEY_F11:
+            video_toggle_fullscreen();
+            return;
         case ALLEGRO_KEY_F10:
             if (debug_core || debug_tube)
                 debug_step = 1;
@@ -424,10 +443,18 @@ static void main_key_up(ALLEGRO_EVENT *event)
                     fullspeed = FSPEED_SELECTED;
             }
             break;
+        case ALLEGRO_KEY_ALT:
+            alt_down = false;
+            break;
     }
     if (fullspeed == FSPEED_SELECTED)
         main_start_fullspeed();
     key_up(code);
+}
+
+void lost_focus() {
+    //force alt down to false;
+    alt_down = false;
 }
 
 double prev_time = 0;
@@ -536,6 +563,9 @@ void main_run()
                 break;
             case ALLEGRO_EVENT_DISPLAY_RESIZE:
                 video_update_window_size(&event);
+                break;
+            case ALLEGRO_EVENT_DISPLAY_SWITCH_OUT:
+                lost_focus();
                 break;
         }
     }

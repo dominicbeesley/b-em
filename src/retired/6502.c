@@ -144,6 +144,436 @@ static inline uint16_t read_zp_indirect(uint16_t zp)
     return readmem(zp & 0xff) + (readmem((zp + 1) & 0xff) << 8);
 }
 
+static uint32_t do_readmem(uint32_t addr)
+{
+
+        if (addr >= 0x10000)
+            return 0xFF;
+
+        if (pc == addr)
+            fetchc[addr] = 31;
+        else
+            readc[addr] = 31;
+
+        if (memstat[vis20k][addr >> 8])
+                return memlook[vis20k][addr >> 8][addr];
+        if (MASTER && (acccon & 0x40) && addr >= 0xFC00)
+                return os[addr & 0x3FFF];
+        if (addr < 0xFE00 || FEslowdown[(addr >> 5) & 7]) {
+                if (cycles & 1) {
+                        polltime(2);
+                } else {
+                        polltime(1);
+                }
+        }
+
+        if (sound_paula) {
+            if (addr >= 0xFCFD && addr <= 0xFDFF) {
+                uint8_t r;
+                if (paula_read(addr, &r))
+                    return r;
+            }
+        }
+
+
+        switch (addr & ~3) {
+            case 0xFC08:
+            case 0xFC0C:
+                if (sound_music5000)
+                    return music2000_read(addr);
+                break;
+        case 0xFC20:
+        case 0xFC24:
+        case 0xFC28:
+        case 0xFC2C:
+        case 0xFC30:
+        case 0xFC34:
+        case 0xFC38:
+        case 0xFC3C:
+                if (sound_beebsid)
+                        return sid_read(addr);
+                break;
+
+        case 0xFC40:
+        case 0xFC44:
+        case 0xFC48:
+        case 0xFC4C:
+        case 0xFC50:
+        case 0xFC54:
+        case 0xFC58:
+                if (scsi_enabled)
+                        return scsi_read(addr);
+                if (ide_enable)
+                        return ide_read(addr);
+                break;
+
+        case 0xFC5C:
+                return vdfs_read(addr);
+                break;
+
+        case 0xFE00:
+        case 0xFE04:
+                return crtc_read(addr);
+
+        case 0xFE08:
+        case 0xFE0C:
+                return acia_read(&sysacia, addr);
+
+        case 0xFE10:
+        case 0xFE14:
+                return serial_read(addr);
+
+        case 0xFE18:
+                if (MASTER)
+                        return adc_read(addr);
+                break;
+
+        case 0xFE24:
+        case 0xFE28:
+                if (MASTER)
+                        return wd1770_read(addr);
+                break;
+
+        case 0xFE34:
+                if (MASTER)
+                        return acccon;
+                break;
+
+        case 0xFE40:
+        case 0xFE44:
+        case 0xFE48:
+        case 0xFE4C:
+        case 0xFE50:
+        case 0xFE54:
+        case 0xFE58:
+        case 0xFE5C:
+                return sysvia_read(addr);
+
+        case 0xFE60:
+        case 0xFE64:
+        case 0xFE68:
+        case 0xFE6C:
+        case 0xFE70:
+        case 0xFE74:
+        case 0xFE78:
+        case 0xFE7C:
+                return uservia_read(addr);
+
+        case 0xFE80:
+        case 0xFE84:
+        case 0xFE88:
+        case 0xFE8C:
+        case 0xFE90:
+        case 0xFE94:
+        case 0xFE98:
+        case 0xFE9C:
+            switch(fdc_type) {
+                case FDC_NONE:
+                case FDC_MASTER:
+                    break;
+                case FDC_I8271:
+                    return i8271_read(addr);
+                default:
+                    return wd1770_read(addr);
+            }
+            break;
+
+        case 0xFEC0:
+        case 0xFEC4:
+        case 0xFEC8:
+        case 0xFECC:
+        case 0xFED0:
+        case 0xFED4:
+        case 0xFED8:
+        case 0xFEDC:
+                if (!MASTER)
+                        return adc_read(addr);
+                break;
+
+        case 0xFEE0:
+        case 0xFEE4:
+        case 0xFEE8:
+        case 0xFEEC:
+        case 0xFEF0:
+        case 0xFEF4:
+        case 0xFEF8:
+        case 0xFEFC:
+                return tube_host_read(addr);
+        }
+        if (addr >= 0xFC00 && addr < 0xFE00)
+                return 0xFF;
+        return addr >> 8;
+}
+
+uint8_t readmem(uint16_t addr)
+{
+    uint32_t value = do_readmem(addr);
+    if (dbg_core6502)
+    debug_memread(&core6502_cpu_debug, addr, value, 1);
+    return value;
+}
+
+static void do_writemem(uint32_t addr, uint32_t val)
+{
+        int c;
+
+        if (addr >= 0x10000)
+            return;
+
+        writec[addr] = 31;
+
+        c = memstat[vis20k][addr >> 8];
+        if (c == 1) {
+                memlook[vis20k][addr >> 8][addr] = val;
+                switch(addr) {
+                    case 0x022c:
+                        buf_remv = (buf_remv & 0xff00) | val;
+                        break;
+                    case 0x022d:
+                        buf_remv = (buf_remv & 0xff) | (val << 8);
+                        break;
+                    case 0x022e:
+                        buf_cnpv = (buf_cnpv & 0xff00) | val;
+                        break;
+                    case 0x022f:
+                        buf_cnpv = (buf_cnpv & 0xff) | (val << 8);
+                        break;
+                }
+                return;
+        } else if (c == 2) {
+                log_debug("6502: attempt to write to ROM %x:%04x=%02x\n", vis20k, addr, val);
+                return;
+        }
+        if (addr < 0xFC00 || addr >= 0xFF00)
+                return;
+        if (addr < 0xFE00 || FEslowdown[(addr >> 5) & 7]) {
+                if (cycles & 1) {
+                        polltime(2);
+                } else {
+                        polltime(1);
+                }
+        }
+
+        if (sound_music5000) {
+           if (addr >= 0xFCFF && addr <= 0xFDFF) {
+              music5000_write(addr, val);
+              //return -- removed DB need to write to all users of paging register
+           }
+        }
+        if (sound_paula)
+        {
+            if (addr >= 0xFCFD && addr <= 0xFDFF) {
+                paula_write(addr, val);
+              return;
+           }
+        }
+
+        switch (addr & ~3) {
+            case 0xFC08:
+            case 0xFC0C:
+                if (sound_music5000)
+                    music2000_write(addr, val);
+                break;
+        case 0xFC20:
+        case 0xFC24:
+        case 0xFC28:
+        case 0xFC2C:
+        case 0xFC30:
+        case 0xFC34:
+        case 0xFC38:
+        case 0xFC3C:
+                if (sound_beebsid)
+                        sid_write(addr, val);
+                break;
+
+        case 0xFC40:
+        case 0xFC44:
+        case 0xFC48:
+        case 0xFC4C:
+        case 0xFC50:
+        case 0xFC54:
+        case 0xFC58:
+                if (scsi_enabled)
+                        scsi_write(addr, val);
+                else if (ide_enable)
+                        ide_write(addr, val);
+                break;
+
+        case 0xFC5C:
+                vdfs_write(addr, val);
+                break;
+
+        case 0xFE00:
+        case 0xFE04:
+                crtc_write(addr, val);
+                break;
+
+        case 0xFE08:
+        case 0xFE0C:
+                acia_write(&sysacia, addr, val);
+                break;
+
+        case 0xFE10:
+        case 0xFE14:
+                serial_write(addr, val);
+                break;
+
+        case 0xFE18:
+                if (MASTER)
+                        adc_write(addr, val);
+                break;
+
+        case 0xFE20:
+                videoula_write(addr, val);
+                break;
+
+        case 0xFE24:
+                if (MASTER)
+                        wd1770_write(addr, val);
+                else
+                        videoula_write(addr, val);
+                break;
+
+        case 0xFE28:
+                if (MASTER)
+                        wd1770_write(addr, val);
+                break;
+
+        case 0xFE30:
+                ram_fe30 = val;
+                for (c = 128; c < 192; c++)
+                        memlook[0][c] = memlook[1][c] =
+                            &rom[(val & 15) << 14] - 0x8000;
+                for (c = 128; c < 192; c++)
+                        memstat[0][c] = memstat[1][c] = rom_slots[val & 15].swram ? 1 : 2;
+                romsel = (val & 15) << 14;
+                ram4k = ((val & 0x80) && MASTER);
+                ram12k = ((val & 0x80) && BPLUS);
+                RAMbank[0xA] = ram12k;
+                if (ram4k) {
+                        for (c = 128; c < 144; c++)
+                                memlook[0][c] = memlook[1][c] = ram;
+                        for (c = 128; c < 144; c++)
+                                memstat[0][c] = memstat[1][c] = 1;
+                }
+                if (ram12k) {
+                        for (c = 128; c < 176; c++)
+                                memlook[0][c] = memlook[1][c] = ram;
+                        for (c = 128; c < 176; c++)
+                                memstat[0][c] = memstat[1][c] = 1;
+                }
+                break;
+
+        case 0xFE34:
+                ram_fe34 = val;
+                if (BPLUS) {
+                        acccon = val;
+                        vidbank = (val & 0x80) << 8;
+                        if (val & 0x80)
+                                RAMbank[0xC] = RAMbank[0xD] = 1;
+                        else
+                                RAMbank[0xC] = RAMbank[0xD] = 0;
+                }
+                if (MASTER) {
+                        acccon = val;
+                        ram8k = (val & 8);
+                        ram20k = (val & 4);
+                        vidbank = (val & 1) ? 0x8000 : 0;
+                        if (val & 2)
+                                RAMbank[0xC] = RAMbank[0xD] = 1;
+                        else
+                                RAMbank[0xC] = RAMbank[0xD] = 0;
+                        for (c = 48; c < 128; c++)
+                                memlook[0][c] = ram + ((ram20k) ? 32768 : 0);
+                        if (ram8k) {
+                                for (c = 192; c < 224; c++)
+                                        memlook[0][c] = memlook[1][c] =
+                                            ram - 0x3000;
+                                for (c = 192; c < 224; c++)
+                                        memstat[0][c] = memstat[1][c] = 1;
+                        } else {
+                                for (c = 192; c < 224; c++)
+                                        memlook[0][c] = memlook[1][c] =
+                                            os - 0xC000;
+                                for (c = 192; c < 224; c++)
+                                        memstat[0][c] = memstat[1][c] = 2;
+                        }
+                }
+                break;
+
+        case 0xFE40:
+        case 0xFE44:
+        case 0xFE48:
+        case 0xFE4C:
+        case 0xFE50:
+        case 0xFE54:
+        case 0xFE58:
+        case 0xFE5C:
+                sysvia_write(addr, val);
+                break;
+
+        case 0xFE60:
+        case 0xFE64:
+        case 0xFE68:
+        case 0xFE6C:
+        case 0xFE70:
+        case 0xFE74:
+        case 0xFE78:
+        case 0xFE7C:
+                uservia_write(addr, val);
+                break;
+
+        case 0xFE80:
+        case 0xFE84:
+        case 0xFE88:
+        case 0xFE8C:
+        case 0xFE90:
+        case 0xFE94:
+        case 0xFE98:
+        case 0xFE9C:
+            switch(fdc_type) {
+                case FDC_NONE:
+                case FDC_MASTER:
+                    break;
+                case FDC_I8271:
+                    i8271_write(addr, val);
+                    break;
+                default:
+                    wd1770_write(addr, val);
+            }
+            break;
+
+        case 0xFEC0:
+        case 0xFEC4:
+        case 0xFEC8:
+        case 0xFECC:
+        case 0xFED0:
+        case 0xFED4:
+        case 0xFED8:
+        case 0xFEDC:
+                if (!MASTER)
+                        adc_write(addr, val);
+                break;
+
+        case 0xFEE0:
+        case 0xFEE4:
+        case 0xFEE8:
+        case 0xFEEC:
+        case 0xFEF0:
+        case 0xFEF4:
+        case 0xFEF8:
+        case 0xFEFC:
+                tube_host_write(addr, val);
+                break;
+        }
+}
+
+void writemem(uint16_t addr, uint8_t val)
+{
+    if (dbg_core6502)
+    debug_memwrite(&core6502_cpu_debug, addr, val, 1);
+    do_writemem(addr, val);
+}
 
 int nmi, oldnmi, interrupt, takeint;
 
