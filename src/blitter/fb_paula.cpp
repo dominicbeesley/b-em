@@ -258,7 +258,7 @@ uint8_t fb_paula::read_regs(uint8_t addr) {
 		return ChannelRegs[ChannelSel].peak;
 		break;
 	case 14:
-		return Volume; //as of 2019/11/23 real paula returns sel here - is a bug to be fixed
+		return Volume; 
 		break;
 	case 15:
 		return ChannelSel;
