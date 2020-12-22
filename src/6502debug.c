@@ -21,12 +21,16 @@ typedef enum {
     INDYL,  // Direct page indirect long indexed (by Y).  65816 only.
     IND,    // Zero (direct) page indirect.
     INDL,   // Direct page indirect long, 24 bit (65816 only)
+    JABS,   // 65816 JMP/JSR ABSolute
     ABS,    // Absolute.
+    JABSL,  // 65816 JMP/JSR Absolute long, 24 bit (65816 only)
     ABSL,   // Absolute long, 24 bit (65816 only)
     ABSX,   // Absolute indexed by X
+    JABSX,  // 65816 JMP Absolute indexed by X
     ABSXL,  // Absolute indexed by X, long
     ABSY,   // Absolute indexed by Y
     IND16,  // Indirect 16bit (for JMP).
+    IND16L, // Indirect 16bit for JMP long (65816 only)
     IND1X,  // Indexed (by X) indirect (for JMP)
     PCR,    // PC-relative.  8bit signed offset from PC for branch instructions.
     PCRL,   // PC-relative.  16bit signed offset from PC.
@@ -175,10 +179,10 @@ static const uint8_t am_816[256]=
 /*       0     1     2     3     4     5     6     7     8     9     A     B     C     D     E     F */
 /*00*/  IMP,  INDX, IMM,  SR,   ZP,   ZP,   ZP,   INDL, IMP,  IMV,  IMPA, IMP,  ABS,  ABS,  ABS,  ABSL,
 /*10*/  PCR,  INDY, IND,  SRY,  ZP,   ZPX,  ZPX,  INDYL,IMP,  ABSY, IMPA, IMP,  ABS,  ABSX, ABSX, ABSXL,
-/*20*/  ABS,  INDX, ABSL, SR,   ZP,   ZP,   ZP,   INDL, IMP,  IMV,  IMPA, IMP,  ABS,  ABS,  ABS,  ABSL,
+/*20*/  JABS, INDX, JABSL,SR,   ZP,   ZP,   ZP,   INDL, IMP,  IMV,  IMPA, IMP,  ABS,  ABS,  ABS,  ABSL,
 /*30*/  PCR,  INDY, IND,  SRY,  ZPX,  ZPX,  ZPX,  INDYL,IMP,  ABSY, IMPA, IMP,  ABSX, ABSX, ABSX, ABSXL,
-/*40*/  IMP,  INDX, IMP,  SR,   BM,   ZP,   ZP,   INDL, IMP,  IMV,  IMPA, IMP,  ABS,  ABS,  ABS,  ABSL,
-/*50*/  PCR,  INDY, IND,  SRY,  BM,   ZPX,  ZPX,  INDYL,IMP,  ABSY, IMP,  IMP,  ABSL, ABSX, ABSX, ABSXL,
+/*40*/  IMP,  INDX, IMP,  SR,   BM,   ZP,   ZP,   INDL, IMP,  IMV,  IMPA, IMP,  JABS, ABS,  ABS,  ABSL,
+/*50*/  PCR,  INDY, IND,  SRY,  BM,   ZPX,  ZPX,  INDYL,IMP,  ABSY, IMP,  IMP,  JABSL,ABSX, ABSX, ABSXL,
 /*60*/  IMP,  INDX, PCRL, SR,   ZP,   ZP,   ZP,   INDL, IMP,  IMV,  IMPA, IMP,  IND16,ABS,  ABS,  ABSL,
 /*70*/  PCR,  INDY, IND,  SRY,  ZPX,  ZPX,  ZPX,  INDYL,IMP,  ABSY, IMP,  IMP,  IND1X,ABSX, ABSX, ABSXL,
 /*80*/  PCR,  INDX, PCRL, SR,   ZP,   ZP,   ZP,   INDL, IMP,  IMV,  IMP,  IMP,  ABS,  ABS,  ABS,  ABSL,
@@ -186,9 +190,9 @@ static const uint8_t am_816[256]=
 /*A0*/  IMX,  INDX, IMX,  SR,   ZP,   ZP,   ZP,   INDL, IMP,  IMV,  IMP,  IMP,  ABS,  ABS,  ABS,  ABSL,
 /*B0*/  PCR,  INDY, IND,  SRY,  ZPX,  ZPX,  ZPY,  INDYL,IMP,  ABSY, IMP,  IMP,  ABSX, ABSX, ABSY, ABSXL,
 /*C0*/  IMX,  INDX, IMM,  SR,   ZP,   ZP,   ZP,   INDL, IMP,  IMV,  IMP,  IMP,  ABS,  ABS,  ABS,  ABSL,
-/*D0*/  PCR,  INDY, IND,  SRY,  IMP,  ZPX,  ZPX,  INDYL,IMP,  ABSY, IMP,  IMP,  ABSL, ABSX, ABSX, ABSXL,
+/*D0*/  PCR,  INDY, IND,  SRY,  IMP,  ZPX,  ZPX,  INDYL,IMP,  ABSY, IMP,  IMP, IND16L,ABSX, ABSX, ABSXL,
 /*E0*/  IMX,  INDX, IMM,  SR,   ZP,   ZP,   ZP,   INDL, IMP,  IMV,  IMP,  IMP,  ABS,  ABS,  ABS,  ABSL,
-/*F0*/  PCR,  INDY, IND,  SRY,  IMP,  ZPX,  ZPX,  INDYL,IMP,  ABSY, IMP,  IMP,  ABSX, ABSX, ABSX, ABSXL
+/*F0*/  PCR,  INDY, IND,  SRY,  ABS,  ZPX,  ZPX,  INDYL,IMP,  ABSY, IMP,  IMP,  JABSX,ABSX, ABSX, ABSXL
 };
 
 uint32_t dbg6502_disassemble(cpu_debug_t *cpu, uint32_t addr, char *buf, size_t bufsize, m6502_t model)
@@ -198,6 +202,10 @@ uint32_t dbg6502_disassemble(cpu_debug_t *cpu, uint32_t addr, char *buf, size_t 
     const char *op_name;
     size_t len;
     addr_mode_t addr_mode;
+
+    uint32_t dbr = (cpu->get_data_bank) ? cpu->get_data_bank() : 0;
+//    uint32_t pbr = (cpu->get_program_bank) ? cpu->get_program_bank() : 0;
+    uint32_t pbr = addr & 0xFF0000;
 
     char addr_buf[SYM_MAX + 10];
     char op_buf[10];
@@ -323,37 +331,74 @@ uint32_t dbg6502_disassemble(cpu_debug_t *cpu, uint32_t addr, char *buf, size_t 
         case ABS:
             p1 = cpu->memread(addr++);
             p2 = cpu->memread(addr++);
-            snprintf(buf, bufsize, "%02X %02X    %s %02X%02X    ", p1, p2, op_name, p2, p1);
+            if (dbr)
+                snprintf(buf, bufsize, "%02X %02X    %s %02X%02X%02X  ", p1, p2, op_name, dbr >> 16, p2, p1);
+            else
+                snprintf(buf, bufsize, "%02X %02X    %s %02X%02X    ", p1, p2, op_name, p2, p1);
             lookforsym = true;
-            symaddr = p1 + (p2 << 8);
+            symaddr = dbr | (p1 + (p2 << 8));
+            break;
+        case JABS:
+            p1 = cpu->memread(addr++);
+            p2 = cpu->memread(addr++);
+            if (pbr)
+                snprintf(buf, bufsize, "%02X %02X    %s %02X%02X%02X  ", p1, p2, op_name, pbr >> 16, p2, p1);
+            else
+                snprintf(buf, bufsize, "%02X %02X    %s %02X%02X    ", p1, p2, op_name, p2, p1);
+            lookforsym = true;
+            symaddr = pbr | (p1 + (p2 << 8));
             break;
         case ABSL:
             p1 = cpu->memread(addr++);
             p2 = cpu->memread(addr++);
             p3 = cpu->memread(addr++);
-            snprintf(buf, bufsize, "%02X %02X %02X %s %02X%02X%02X  ", p1, p2, p3, op_name, p2, p1, p3);
+            snprintf(buf, bufsize, "%02X %02X %02X %s %02X%02X%02X  ", p1, p2, p3, op_name, p3, p2, p1);
+            lookforsym = true;
+            symaddr = p1 + (p2 << 8) + (p3 << 16);
+            break;
+        case JABSL:
+            p1 = cpu->memread(addr++);
+            p2 = cpu->memread(addr++);
+            p3 = cpu->memread(addr++);
+            snprintf(buf, bufsize, "%02X %02X %02X %s %02X%02X%02X  ", p1, p2, p3, op_name, p3, p2, p1);
             lookforsym = true;
             symaddr = p1 + (p2 << 8) + (p3 << 16);
             break;
         case ABSX:
             p1 = cpu->memread(addr++);
             p2 = cpu->memread(addr++);
-            snprintf(buf, bufsize, "%02X %02X    %s %02X%02X,X  ", p1, p2, op_name, p2, p1);
+            if (dbr)
+                snprintf(buf, bufsize, "%02X %02X    %s %02X%02X%02X,X", p1, p2, op_name, dbr >> 16, p2, p1);
+            else
+                snprintf(buf, bufsize, "%02X %02X    %s %02X%02X,X  ", p1, p2, op_name, p2, p1);
             lookforsym = true;
-            symaddr = p1 + (p2 << 8);
+            symaddr = dbr | p1 + (p2 << 8);
+            break;
+        case JABSX:
+            p1 = cpu->memread(addr++);
+            p2 = cpu->memread(addr++);
+            if (pbr)
+                snprintf(buf, bufsize, "%02X %02X    %s %02X%02X%02X,X", p1, p2, op_name, pbr >> 16, p2, p1);
+            else
+                snprintf(buf, bufsize, "%02X %02X    %s %02X%02X,X  ", p1, p2, op_name, p2, p1);
+            lookforsym = true;
+            symaddr = pbr | p1 + (p2 << 8);
             break;
         case ABSY:
             p1 = cpu->memread(addr++);
             p2 = cpu->memread(addr++);
-            snprintf(buf, bufsize, "%02X %02X    %s %02X%02X,Y  ", p1, p2, op_name, p2, p1);
+            if (dbr)
+                snprintf(buf, bufsize, "%02X %02X    %s %02X%02X%02X,Y", p1, p2, op_name, dbr >> 16, p2, p1);
+            else
+                snprintf(buf, bufsize, "%02X %02X    %s %02X%02X,Y  ", p1, p2, op_name, p2, p1);
             lookforsym = true;
-            symaddr = p1 + (p2 << 8);
+            symaddr = dbr | p1 + (p2 << 8);
             break;
         case ABSXL:
             p1 = cpu->memread(addr++);
             p2 = cpu->memread(addr++);
             p3 = cpu->memread(addr++);
-            snprintf(buf, bufsize, "%02X %02X %02X  %s %02X%02X%02X,X  ", p1, p2, p3, op_name, p2, p1, p3);
+            snprintf(buf, bufsize, "%02X %02X %02X  %s %02X%02X%02X,X  ", p1, p2, p3, op_name, p3, p2, p1);
             lookforsym = true;
             symaddr = p1 + (p2 << 8) + (p3 << 16);
             break;
@@ -361,37 +406,57 @@ uint32_t dbg6502_disassemble(cpu_debug_t *cpu, uint32_t addr, char *buf, size_t 
             p1 = cpu->memread(addr++);
             p2 = cpu->memread(addr++);
             snprintf(buf, bufsize, "%02X %02X    %s %02X,%02X   ", p1, p2, op_name, p1, p2);
-            lookforsym = true;
-            symaddr = p1 + (p2 << 8);
             break;
         case IND16:
+            //note this is always bank 0!
             p1 = cpu->memread(addr++);
             p2 = cpu->memread(addr++);
             snprintf(buf, bufsize, "%02X %02X    %s (%02X%02X)  ", p1, p2, op_name, p2, p1);
             lookforsym = true;
             symaddr = p1 + (p2 << 8);
             break;
+        case IND16L:
+            //note this is always bank 0!
+            p1 = cpu->memread(addr++);
+            p2 = cpu->memread(addr++);
+            snprintf(buf, bufsize, "%02X %02X    %s [%02X%02X]  ", p1, p2, op_name, p2, p1);
+            lookforsym = true;
+            symaddr = p1 + (p2 << 8);
+            break;
         case IND1X:
             p1 = cpu->memread(addr++);
             p2 = cpu->memread(addr++);
-            snprintf(buf, bufsize, "%02X %02X    %s (%02X%02X,X)", p1, p2, op_name, p2, p1);
+            if (pbr)
+                snprintf(buf, bufsize, "%02X %02X    %s (%02X%02X%02X,X)", p1, p2, op_name, pbr >> 16, p2, p1);
+            else
+                snprintf(buf, bufsize, "%02X %02X    %s (%02X%02X,X)", p1, p2, op_name, p2, p1);
             lookforsym = true;
-            symaddr = p1 + (p2 << 8);
+            symaddr = pbr | p1 + (p2 << 8);
             break;
         case PCR:
             p1 = cpu->memread(addr++);
             temp = (signed char)p1;
             temp += addr;
-            snprintf(buf, bufsize, "%02X       %s %04X    ", p1, op_name, temp);
+            //note 16 bit wrap
+            temp = temp & 0xFFFF;
+            if (pbr)
+                snprintf(buf, bufsize, "%02X       %s %02X%04X  ", p1, op_name, pbr >> 16, temp);
+            else
+                snprintf(buf, bufsize, "%02X       %s %04X    ", p1, op_name, temp);
             lookforsym = true;
-            symaddr = temp;
+            symaddr = pbr | temp;
             break;
         case PCRL:
             p1 = cpu->memread(addr++);
             p2 = cpu->memread(addr++);
             temp = (int16_t)((uint16_t)p1 | (uint16_t)p2 <<8);
             temp += addr;
-            snprintf(buf, bufsize, "%02X %02X     %s %04X    ", p1, p2, op_name, temp);
+            //note 16 bit wrap
+            temp = temp & 0xFFFF;
+            if (pbr)
+                snprintf(buf, bufsize, "%02X %02X     %s %02%04X  ", p1, p2, pbr >> 16, op_name, temp);
+            else
+                snprintf(buf, bufsize, "%02X %02X     %s %04X    ", p1, p2, op_name, temp);
             lookforsym = true;
             symaddr = temp;
             break;

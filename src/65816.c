@@ -203,7 +203,18 @@ static void dbg_reg_set(int which, uint32_t value)
 
 size_t dbg65816_print_flags(char *buf, size_t bufsize)
 {
-    if (bufsize >= 8) {
+    if (p.e) {
+        if (bufsize >= 6) {
+            *buf++ = p.n ? 'N' : ' ';
+            *buf++ = p.v ? 'V' : ' ';
+            *buf++ = p.d ? 'D' : ' ';
+            *buf++ = p.i ? 'I' : ' ';
+            *buf++ = p.z ? 'Z' : ' ';
+            *buf++ = p.c ? 'C' : ' ';
+            return 6;
+        }
+    }
+    else if (bufsize >= 8) {
         *buf++ = p.n  ? 'N' : ' ';
         *buf++ = p.v  ? 'V' : ' ';
         *buf++ = p.m  ? 'M' : ' ';
@@ -244,6 +255,15 @@ static uint32_t dbg_get_instr_addr(void)
     return toldpc;
 }
 
+static uint32_t dbg_get_pbr(void) {
+    return pbr;
+}
+
+static uint32_t dbg_get_dbr(void) {
+    return dbr;
+}
+
+
 cpu_debug_t tube65816_cpu_debug = {
     .cpu_name       = "65816",
     .debug_enable   = dbg_debug_enable,
@@ -256,7 +276,9 @@ cpu_debug_t tube65816_cpu_debug = {
     .reg_print      = dbg_reg_print,
     .reg_parse      = dbg_reg_parse,
     .get_instr_addr = dbg_get_instr_addr,
-    .print_addr     = debug_print_addr16
+    .print_addr     = debug_print_addr16,
+    .get_program_bank = dbg_get_pbr,
+    .get_data_bank = dbg_get_dbr
 };
 
 static uint32_t dbg_disassemble(cpu_debug_t *cpu, uint32_t addr, char *buf, size_t bufsize)
