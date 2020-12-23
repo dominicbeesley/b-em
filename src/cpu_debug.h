@@ -31,8 +31,6 @@ typedef struct cpu_debug_t {
   const int default_base;                                             // Allows a co pro to override the default base of 16
   size_t   (*print_addr)(cpu_debug_t *cpu, uint32_t addr, char *buf, size_t bufsize, bool include_symbol);   // Print an address.
   symbol_table *symbols;                                              // symbol table for storing symbolic addresses
-  uint32_t (*get_program_bank)(void);                                 // 65816 program bank
-  uint32_t (*get_data_bank)(void);                                    // 65816 data bank
 } cpu_debug_t;
 
 extern void debug_memread (cpu_debug_t *cpu, uint32_t addr, uint32_t value, uint8_t size);

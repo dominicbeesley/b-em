@@ -255,14 +255,6 @@ static uint32_t dbg_get_instr_addr(void)
     return toldpc;
 }
 
-static uint32_t dbg_get_pbr(void) {
-    return pbr;
-}
-
-static uint32_t dbg_get_dbr(void) {
-    return dbr;
-}
-
 
 cpu_debug_t tube65816_cpu_debug = {
     .cpu_name       = "65816",
@@ -277,8 +269,6 @@ cpu_debug_t tube65816_cpu_debug = {
     .reg_parse      = dbg_reg_parse,
     .get_instr_addr = dbg_get_instr_addr,
     .print_addr     = debug_print_addr16,
-    .get_program_bank = dbg_get_pbr,
-    .get_data_bank = dbg_get_dbr
 };
 
 static uint32_t dbg_disassemble(cpu_debug_t *cpu, uint32_t addr, char *buf, size_t bufsize)

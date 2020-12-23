@@ -47,7 +47,21 @@ bool symbol_table::find_by_addr(uint32_t addr, const char * &ret) const {
 
 inline uint32_t addr_distance(uint32_t a, uint32_t b)
 {
-    return (a <= b) ? b - a : a - b;
+    // this is deliberately skewed to positive to favour addresses of the form A+2 for 24 bit
+    // addresses on the 65816
+
+    uint32_t ret;
+
+    if (a < b) {
+        ret = b - a;
+        if (ret == 2 || ret == 1)
+            ret = 0;
+    }
+    else {
+        ret = a - b;
+    }
+
+    return ret;
 }
 
 bool symbol_table::find_by_addr_near(uint32_t addr, uint32_t min, uint32_t max, uint32_t &addr_found, const char * &ret) const {

@@ -203,7 +203,7 @@ uint32_t dbg6502_disassemble(cpu_debug_t *cpu, uint32_t addr, char *buf, size_t 
     size_t len;
     addr_mode_t addr_mode;
 
-    uint32_t dbr = (cpu->get_data_bank) ? cpu->get_data_bank() : 0;
+    uint32_t dbr = cpu->reg_get(REG_DB);
 //    uint32_t pbr = (cpu->get_program_bank) ? cpu->get_program_bank() : 0;
     uint32_t pbr = addr & 0xFF0000;
 
@@ -454,11 +454,11 @@ uint32_t dbg6502_disassemble(cpu_debug_t *cpu, uint32_t addr, char *buf, size_t 
             //note 16 bit wrap
             temp = temp & 0xFFFF;
             if (pbr)
-                snprintf(buf, bufsize, "%02X %02X     %s %02%04X  ", p1, p2, pbr >> 16, op_name, temp);
+                snprintf(buf, bufsize, "%02X %02X    %s %02X%04X  ", p1, p2, op_name, pbr >> 16, temp);
             else
-                snprintf(buf, bufsize, "%02X %02X     %s %04X    ", p1, p2, op_name, temp);
+                snprintf(buf, bufsize, "%02X %02X    %s %04X    ", p1, p2, op_name, temp);
             lookforsym = true;
-            symaddr = temp;
+            symaddr = pbr | temp;
             break;
         case BITC:
             p1 = cpu->memread(addr++);
@@ -492,7 +492,7 @@ uint32_t dbg6502_disassemble(cpu_debug_t *cpu, uint32_t addr, char *buf, size_t 
             int ll = strlen(buf);
             if (symaddr_found < symaddr)
                 snprintf(buf + ll, bufsize - ll, "\\ (%s+%d)", sym, symaddr - symaddr_found);
-            else if (symaddr_found < symaddr)
+            else if (symaddr_found > symaddr)
                 snprintf(buf + ll, bufsize - ll, "\\ (%s-%d)", sym, symaddr_found - symaddr);
             else
                 snprintf(buf + ll, bufsize - ll, "\\ (%s)", sym);
